@@ -1,0 +1,33 @@
+name: wetland
+description: Adaptive navigation on any device for Flutter
+homepage: https://github.com/insightop/wetland
+version: 0.0.1
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # 路由管理
+  go_router: ^14.4.1
+  auto_route: ^9.2.2
+
+  # 依赖注入
+  get_it: ^8.0.2
+
+  # 状态管理
+  flutter_bloc: ^8.1.6
+
+  # 适配
+  flutter_adaptive_scaffold: ^0.3.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
