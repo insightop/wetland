@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:auto_route/auto_route.dart';
 
+@RoutePage()
 class DetailPage extends StatelessWidget {
   final String title;
-  const DetailPage({super.key, required this.title});
+  const DetailPage({
+    @PathParam() this.title = 'Detail',
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

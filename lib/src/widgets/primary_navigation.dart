@@ -1,12 +1,15 @@
 import "package:flutter/material.dart";
 import "package:flutter_adaptive_scaffold/flutter_adaptive_scaffold.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
-import "../blocs/wetland_cubit.dart";
+import "../blocs/wetland_bloc.dart";
 import "../utils/destination.dart";
 
 class WetlandPrimaryNavigation extends StatelessWidget {
   final List<TabDestination> destinations;
-  const WetlandPrimaryNavigation({super.key, required this.destinations});
+  const WetlandPrimaryNavigation(
+    this.destinations, {
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +30,7 @@ class WetlandPrimaryNavigation extends StatelessWidget {
               color: Theme.of(context).colorScheme.onSurface, // 未选中的标签颜色
             );
 
-    return BlocBuilder<WetlandCubit, WetlandState>(
+    return BlocBuilder<WetlandBloc, WetlandState>(
       builder: (context, state) {
         return Container(
           decoration: BoxDecoration(
@@ -54,11 +57,10 @@ class WetlandPrimaryNavigation extends StatelessWidget {
                   ),
                 )
                 .toList(),
-            selectedIndex: state is WetlandStateSelectedDestination
-                ? state.index
-                : (state as WetlandStateInitial).index,
-            onDestinationSelected: (e) =>
-                context.read<WetlandCubit>().changeDestination(e),
+            selectedIndex: state.selectedDestination,
+            onDestinationSelected: (e) => context
+                .read<WetlandBloc>()
+                .add(WetlandEvent.changeDestination(e)),
           ),
         );
       },

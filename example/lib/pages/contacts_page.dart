@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:auto_route/auto_route.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
+import 'package:wetland/wetland.dart';
+import '../router/router.gr.dart';
 import 'detail_page.dart';
 
+@RoutePage()
 class ContactsPage extends StatelessWidget {
   final String title;
-  const ContactsPage({super.key, required this.title});
+  const ContactsPage({
+    @PathParam() this.title = 'Contacts',
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -30,10 +37,7 @@ class ContactsPage extends StatelessWidget {
                 effect: SoldColorEffect(),
                 child: Text('click to show detail'),
               ),
-              onTap: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => DetailPage(title: title)));
-              },
+              onTap: () => context.wetland.push(DetailRoute(title: title)),
               // ),
             );
           },

@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:auto_route/auto_route.dart';
+import 'package:wetland/wetland.dart';
 
+import '../router/router.gr.dart';
 import 'detail_page.dart';
 
+@RoutePage()
 class ListPage extends StatelessWidget {
   final String title;
-  const ListPage({super.key, required this.title});
+  const ListPage({
+    @PathParam() this.title = 'List',
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -30,10 +37,9 @@ class ListPage extends StatelessWidget {
                 effect: SoldColorEffect(),
                 child: Text('click to show detail'),
               ),
-              onTap: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => DetailPage(title: title)));
-              },
+              onTap: () => context.wetland.push(DetailRoute(title: title)),
+              // context.router.push(DetailRoute(title: title)),
+              // ),
               // ),
             );
           },

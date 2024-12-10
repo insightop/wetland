@@ -1,12 +1,15 @@
 import "package:flutter/material.dart";
 import "package:flutter_adaptive_scaffold/flutter_adaptive_scaffold.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
-import "../blocs/wetland_cubit.dart";
+import "../blocs/wetland_bloc.dart";
 import "../utils/destination.dart";
 
 class WetlandBottomNavigation extends StatelessWidget {
   final List<TabDestination> destinations;
-  const WetlandBottomNavigation({super.key, required this.destinations});
+  const WetlandBottomNavigation(
+    this.destinations, {
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +30,7 @@ class WetlandBottomNavigation extends StatelessWidget {
               color: Theme.of(context).colorScheme.onSurface, // 未选中的标签颜色
             );
 
-    return BlocBuilder<WetlandCubit, WetlandState>(
+    return BlocBuilder<WetlandBloc, WetlandState>(
       builder: (context, state) {
         return BottomNavigationBar(
             showSelectedLabels: true,
@@ -35,9 +38,7 @@ class WetlandBottomNavigation extends StatelessWidget {
             type: BottomNavigationBarType.fixed,
             landscapeLayout: BottomNavigationBarLandscapeLayout
                 .linear, // centered, spread, linear
-            currentIndex: state is WetlandStateSelectedDestination
-                ? state.index
-                : (state as WetlandStateInitial).index,
+            currentIndex: state.selectedDestination,
             items: destinations
                 .map((e) => BottomNavigationBarItem(
                       label: e.label,
@@ -45,11 +46,14 @@ class WetlandBottomNavigation extends StatelessWidget {
                       activeIcon: e.selectedIcon,
                     ))
                 .toList(),
-            onTap: (e) => context.read<WetlandCubit>().changeDestination(e));
+            onTap: (e) => context
+                .read<WetlandBloc>()
+                .add(WetlandEvent.changeDestination(e)));
       },
     );
   }
 }
+
 
 // // 底部导航
 // final bottomNavigationBarBuilder =

@@ -4,7 +4,7 @@ homepage: https://github.com/insightop/wetland
 version: 0.0.1
 
 environment:
-  sdk: ">=3.5.0 <4.0.0"
+  sdk: ">=3.5.0"
 
 dependencies:
   flutter:
@@ -12,8 +12,9 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   # 路由管理
-  go_router: ^14.4.1
-  auto_route: ^9.2.2
+  # go_router: ^14.4.1
+  auto_route: ^9.2.2 # (也支持嵌套导航)
+  flutter_modular: ^6.3.4
 
   # 依赖注入
   get_it: ^8.0.2
@@ -25,10 +26,21 @@ dependencies:
   flutter_adaptive_scaffold: ^0.3.1
   equatable: ^2.0.5
 
+  # 导航
+  qlevar_router: ^1.12.0
+  octopus: ^0.0.9
+  beamer: ^1.7.0 # 嵌套导航
+  navigator_plus: ^1.2.0
+  navigator_scope: ^1.0.1
+  freezed_annotation: ^2.4.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  build_runner: ^2.4.13
+  freezed: ^2.5.7
+  auto_route_generator: ^9.0.0
 
 flutter:
   uses-material-design: true
