@@ -9,12 +9,11 @@ dependencies:
   flutter:
     sdk: flutter
 
-  cupertino_icons: ^1.0.8
-  skeletonizer: ^1.4.2
-
   wetland:
     path: ../
+
   auto_route: ^9.2.2
+  skeletonizer: ^1.4.2
 
 dev_dependencies:
   flutter_test:
