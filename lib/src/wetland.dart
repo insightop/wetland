@@ -3,6 +3,8 @@ import "package:flutter/services.dart";
 
 import "package:flutter_bloc/flutter_bloc.dart";
 import "package:flutter_adaptive_scaffold/flutter_adaptive_scaffold.dart";
+import "package:flutter_logcat/flutter_logcat.dart";
+
 import "package:wetland/src/widgets/bottom_navigation.dart";
 import "package:wetland/src/widgets/primary_navigation.dart";
 
@@ -14,6 +16,11 @@ import "utils/navigator.dart";
 
 bool logicalXor(bool a, bool b) {
   return (a || b) && !(a && b);
+}
+
+enum WetlandMode {
+  dual,
+  single,
 }
 
 class Wetland extends StatelessWidget {
@@ -35,6 +42,21 @@ class Wetland extends StatelessWidget {
   }) : assert(logicalXor(destinations == null, primaryBody == null),
             'Only one of destinations or primaryBody can be set');
 
+  void setWetlandMode(WetlandMode mode) {
+    switch (mode) {
+      case WetlandMode.dual:
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.leanBack);
+        // SystemChrome.setPreferredOrientations(
+        // [DeviceOrientation.landscapeLeft]);
+        break;
+      case WetlandMode.single:
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+        // SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+        break;
+    }
+    Log.d('Set [WetlandMode] to [$mode]');
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -53,10 +75,8 @@ class Wetland extends StatelessWidget {
                       Breakpoints.mediumLargeAndUp: SlotLayout.from(
                         key: const Key('Primary Navigation'),
                         builder: (_) {
-                          // 临时隐藏状态栏
-                          SystemChrome.setEnabledSystemUIMode(
-                              SystemUiMode.manual,
-                              overlays: []);
+                          setWetlandMode(WetlandMode.dual);
+
                           return WetlandPrimaryNavigation(
                             destinations!,
                             leading: primaryNavigationRailLeading,
@@ -80,10 +100,7 @@ class Wetland extends StatelessWidget {
                       Breakpoints.small: SlotLayout.from(
                         key: const Key('Bottom Navigation'),
                         builder: (_) {
-                          // 显示状态栏
-                          SystemChrome.setEnabledSystemUIMode(
-                              SystemUiMode.manual,
-                              overlays: SystemUiOverlay.values);
+                          setWetlandMode(WetlandMode.single);
                           return WetlandBottomNavigation(destinations!);
                           // outAnimation: (child, animation) => AdaptiveScaffold.topToBottom(child, animation),
                           // outCurve: Curves.easeInOutCubic,
@@ -92,10 +109,7 @@ class Wetland extends StatelessWidget {
                       Breakpoints.medium: SlotLayout.from(
                         key: const Key('Bottom Navigation'),
                         builder: (_) {
-                          // 显示状态栏
-                          SystemChrome.setEnabledSystemUIMode(
-                              SystemUiMode.manual,
-                              overlays: SystemUiOverlay.values);
+                          setWetlandMode(WetlandMode.single);
                           return WetlandBottomNavigation(destinations!);
                           // outAnimation: (child, animation) => AdaptiveScaffold.topToBottom(child, animation),
                           // outCurve: Curves.easeInOutCubic,

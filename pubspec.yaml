@@ -19,6 +19,8 @@ dependencies:
   # 代码生成
   freezed_annotation: ^2.4.4
 
+  flutter_logcat: ^1.2.8
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

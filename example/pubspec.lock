@@ -251,6 +251,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.0"
+  flutter_logcat:
+    dependency: transitive
+    description:
+      name: flutter_logcat
+      sha256: "5380e208bcb7f2dcf7d0ee70fab58b6779e921c83498621df00c3b730f6a5f25"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.8"
   flutter_test:
     dependency: "direct dev"
     description: flutter
