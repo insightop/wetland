@@ -6,8 +6,12 @@ import "../utils/destination.dart";
 
 class WetlandPrimaryNavigation extends StatelessWidget {
   final List<TabDestination> destinations;
+  final Widget? leading;
+  final Widget? trailing;
   const WetlandPrimaryNavigation(
     this.destinations, {
+    this.leading,
+    this.trailing,
     super.key,
   });
 
@@ -36,13 +40,13 @@ class WetlandPrimaryNavigation extends StatelessWidget {
           decoration: BoxDecoration(
             //导航栏右侧增加竖线
             border: Border(
-                right: BorderSide(color: Colors.grey.shade300, width: 0.5)),
+                right: BorderSide(color: Colors.grey.shade300, width: 0.1)),
           ),
           child: AdaptiveScaffold.standardNavigationRail(
-            leading: Padding(
-                padding: const EdgeInsets.all(20.0), child: CircleAvatar()),
+            leading: leading,
+            trailing: trailing,
             padding: EdgeInsets.zero,
-            width: 74,
+            width: 74, //74
             labelType: NavigationRailLabelType.all, // 标题显示方式
             selectedIconTheme: selectedIconTheme,
             unselectedIconTheme: unselectedIconTheme,

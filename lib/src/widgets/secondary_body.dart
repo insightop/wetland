@@ -3,19 +3,17 @@ import 'package:flutter/material.dart';
 
 class SecondaryBody extends StatelessWidget {
   final GlobalKey<NavigatorState> navigatorKey;
-  final Widget placeholder;
 
   const SecondaryBody({
     super.key,
     required this.navigatorKey,
-    required this.placeholder,
   });
 
   @override
   Widget build(BuildContext context) {
     return AutoRouter(
       navigatorKey: navigatorKey,
-      placeholder: (_) => placeholder,
+      // placeholder: (_) => placeholder,
     );
   }
 }

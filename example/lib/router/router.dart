@@ -14,6 +14,8 @@ class AppRouter extends RootStackRouter {
         AutoRoute(page: LoginRoute.page),
         //! Home
         AutoRoute(page: HomeRoute.page, initial: true, children: [
+          //! Placeholder
+          AutoRoute(path: '', page: PlaceholderRoute.page),
           //! Messages
           AutoRoute(page: MessagesRoute.page),
           //! Contacts
