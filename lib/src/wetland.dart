@@ -12,13 +12,13 @@ import "blocs/wetland_bloc.dart";
 // import "pages/default_placeholder_page.dart";
 import "widgets/secondary_body.dart";
 import "utils/destination.dart";
-import "utils/navigator.dart";
+import "utils/wetland_scope.dart";
 
 bool logicalXor(bool a, bool b) {
   return (a || b) && !(a && b);
 }
 
-class Wetland extends StatelessWidget {
+class Wetland extends StatefulWidget {
   final List<TabDestination>? destinations;
   final Widget? primaryBody;
   // final Widget placeholder;
@@ -42,6 +42,38 @@ class Wetland extends StatelessWidget {
        );
 
   @override
+  State<Wetland> createState() => _WetlandState();
+}
+
+class _WetlandState extends State<Wetland> {
+  late List<GlobalKey<NavigatorState>> _secondaryKeys;
+
+  @override
+  void initState() {
+    super.initState();
+    _secondaryKeys = _buildKeys(widget.destinations?.length ?? 0);
+  }
+
+  @override
+  void didUpdateWidget(Wetland oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldCount = oldWidget.destinations?.length ?? 0;
+    final newCount = widget.destinations?.length ?? 0;
+    if (newCount > oldCount) {
+      _secondaryKeys.addAll(_buildKeys(newCount - oldCount));
+    } else if (newCount < oldCount) {
+      _secondaryKeys.removeRange(newCount, oldCount);
+    }
+  }
+
+  List<GlobalKey<NavigatorState>> _buildKeys(int count) {
+    return List.generate(
+      count,
+      (i) => GlobalKey<NavigatorState>(debugLabel: 'secondary_$i'),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => WetlandBloc(),
@@ -49,92 +81,106 @@ class Wetland extends StatelessWidget {
         listener: (context, state) => _applySystemUi(state.mode),
         child: BlocBuilder<WetlandBloc, WetlandState>(
           builder: (context, state) {
-            return AdaptiveLayout(
-              //! 比例
-              bodyRatio: 0.35,
-              //! 过渡动画
-              transitionDuration: transitionDuration,
-              //! 主导航
-              primaryNavigation: destinations != null
-                  ? SlotLayout(
-                      config: <Breakpoint, SlotLayoutConfig>{
-                        Breakpoints.mediumLargeAndUp: SlotLayout.from(
-                          key: const Key('Primary Navigation'),
-                          builder: (_) {
-                            _setMode(context, WetlandMode.dual);
+            return WetlandScope(
+              secondaryKeys: _secondaryKeys,
+              child: AdaptiveLayout(
+                //! 比例
+                bodyRatio: 0.35,
+                //! 过渡动画
+                transitionDuration: widget.transitionDuration,
+                //! 主导航
+                primaryNavigation: widget.destinations != null
+                    ? SlotLayout(
+                        config: <Breakpoint, SlotLayoutConfig>{
+                          Breakpoints.mediumLargeAndUp: SlotLayout.from(
+                            key: const Key('Primary Navigation'),
+                            builder: (_) {
+                              _setMode(context, WetlandMode.dual);
 
-                            return PrimaryNavigation(
-                              destinations!,
-                              leading: primaryNavigationRailLeading,
-                              trailing: primaryNavigationRailTrailing,
-                            );
-                          },
-                          inAnimation: (child, animation) =>
-                              AdaptiveScaffold.leftOutIn(child, animation),
-                          inCurve: Curves.linear,
-                          // outAnimation: (child, animation) =>
-                          // AdaptiveScaffold.leftInOut(child, animation),
-                          // outCurve: Curves.linear,
-                        ),
-                      },
-                    )
-                  : null,
-              //! 底部导航
-              bottomNavigation: destinations != null
-                  ? SlotLayout(
-                      config: <Breakpoint, SlotLayoutConfig>{
-                        Breakpoints.small: SlotLayout.from(
-                          key: const Key('Bottom Navigation'),
-                          builder: (_) {
-                            _setMode(context, WetlandMode.single);
-                            return BottomNavigation(destinations!);
-                            // outAnimation: (child, animation) => AdaptiveScaffold.topToBottom(child, animation),
-                            // outCurve: Curves.easeInOutCubic,
-                          },
-                        ),
-                        Breakpoints.medium: SlotLayout.from(
-                          key: const Key('Bottom Navigation'),
-                          builder: (_) {
-                            _setMode(context, WetlandMode.single);
-                            return BottomNavigation(destinations!);
-                            // outAnimation: (child, animation) => AdaptiveScaffold.topToBottom(child, animation),
-                            // outCurve: Curves.easeInOutCubic,
-                          },
-                        ),
-                      },
-                    )
-                  : null,
-              //! 主体
-              body: SlotLayout(
-                config: <Breakpoint, SlotLayoutConfig>{
-                  Breakpoints.standard: SlotLayout.from(
-                    key: const Key('Primary Body MediumLarge'),
-                    builder: (_) => destinations != null
-                        ? destinations![state.index].page
-                        // : Text('test')
-                        : primaryBody!,
-                  ),
-                },
-              ),
-              //! 次要主体
-              secondaryBody: SlotLayout(
-                config: <Breakpoint, SlotLayoutConfig>{
-                  Breakpoints.mediumLargeAndUp: SlotLayout.from(
-                    key: const Key('Secondary Body'),
-                    builder: (_) => SecondaryBody(
-                      navigatorKey: secondaryNavigatorKey,
+                              return PrimaryNavigation(
+                                widget.destinations!,
+                                leading: widget.primaryNavigationRailLeading,
+                                trailing: widget.primaryNavigationRailTrailing,
+                              );
+                            },
+                            inAnimation: (child, animation) =>
+                                AdaptiveScaffold.leftOutIn(child, animation),
+                            inCurve: Curves.linear,
+                            // outAnimation: (child, animation) =>
+                            // AdaptiveScaffold.leftInOut(child, animation),
+                            // outCurve: Curves.linear,
+                          ),
+                        },
+                      )
+                    : null,
+                //! 底部导航
+                bottomNavigation: widget.destinations != null
+                    ? SlotLayout(
+                        config: <Breakpoint, SlotLayoutConfig>{
+                          Breakpoints.small: SlotLayout.from(
+                            key: const Key('Bottom Navigation'),
+                            builder: (_) {
+                              _setMode(context, WetlandMode.single);
+                              return BottomNavigation(widget.destinations!);
+                              // outAnimation: (child, animation) => AdaptiveScaffold.topToBottom(child, animation),
+                              // outCurve: Curves.easeInOutCubic,
+                            },
+                          ),
+                          Breakpoints.medium: SlotLayout.from(
+                            key: const Key('Bottom Navigation'),
+                            builder: (_) {
+                              _setMode(context, WetlandMode.single);
+                              return BottomNavigation(widget.destinations!);
+                              // outAnimation: (child, animation) => AdaptiveScaffold.topToBottom(child, animation),
+                              // outCurve: Curves.easeInOutCubic,
+                            },
+                          ),
+                        },
+                      )
+                    : null,
+                //! 主体
+                body: SlotLayout(
+                  config: <Breakpoint, SlotLayoutConfig>{
+                    Breakpoints.standard: SlotLayout.from(
+                      key: const Key('Primary Body MediumLarge'),
+                      builder: (_) => widget.destinations != null
+                          ? widget.destinations![state.index].page
+                          // : Text('test')
+                          : widget.primaryBody!,
                     ),
-                    // outAnimation: (child, animation) => AdaptiveScaffold.rightOutIn(child, animation),
-                    outAnimation: (child, animation) => SlideTransition(
-                      position: Tween<Offset>(
-                        begin: Offset(0.0, 0.0),
-                        end: Offset(0.0, 0.0),
-                      ).animate(animation),
-                      child: child,
-                    ),
-                    outCurve: Curves.easeInOutCubic,
-                  ),
-                },
+                  },
+                ),
+                //! 次要主体
+                secondaryBody: widget.destinations != null
+                    ? SlotLayout(
+                        config: <Breakpoint, SlotLayoutConfig>{
+                          Breakpoints.mediumLargeAndUp: SlotLayout.from(
+                            key: const Key('Secondary Body'),
+                            builder: (_) => IndexedStack(
+                              index: state.index,
+                              children: [
+                                for (var i = 0;
+                                    i < widget.destinations!.length;
+                                    i++)
+                                  SecondaryBody(
+                                    navigatorKey: _secondaryKeys[i],
+                                  ),
+                              ],
+                            ),
+                            // outAnimation: (child, animation) => AdaptiveScaffold.rightOutIn(child, animation),
+                            outAnimation: (child, animation) =>
+                                SlideTransition(
+                              position: Tween<Offset>(
+                                begin: Offset(0.0, 0.0),
+                                end: Offset(0.0, 0.0),
+                              ).animate(animation),
+                              child: child,
+                            ),
+                            outCurve: Curves.easeInOutCubic,
+                          ),
+                        },
+                      )
+                    : null,
               ),
             );
           },
