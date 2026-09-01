@@ -59,11 +59,12 @@ class _WetlandState extends State<Wetland> {
     super.didUpdateWidget(oldWidget);
     final oldCount = oldWidget.destinations?.length ?? 0;
     final newCount = widget.destinations?.length ?? 0;
-    if (newCount > oldCount) {
-      _secondaryKeys.addAll(_buildKeys(newCount - oldCount));
-    } else if (newCount < oldCount) {
-      _secondaryKeys.removeRange(newCount, oldCount);
-    }
+    if (newCount == oldCount) return;
+    // 重新分配新列表，保证引用变化，使 WetlandScope.updateShouldNotify 能触发。
+    _secondaryKeys = [
+      ..._secondaryKeys.take(newCount),
+      ..._buildKeys((newCount - oldCount).clamp(0, newCount)),
+    ];
   }
 
   List<GlobalKey<NavigatorState>> _buildKeys(int count) {
@@ -71,6 +72,12 @@ class _WetlandState extends State<Wetland> {
       count,
       (i) => GlobalKey<NavigatorState>(debugLabel: 'secondary_$i'),
     );
+  }
+
+  /// 将当前选中的 tab index 限制在 destinations 范围内，避免 shrink 后越界。
+  int _safeIndex(int index, int length) {
+    if (index < length) return index;
+    return length > 0 ? length - 1 : 0;
   }
 
   @override
@@ -81,6 +88,9 @@ class _WetlandState extends State<Wetland> {
         listener: (context, state) => _applySystemUi(state.mode),
         child: BlocBuilder<WetlandBloc, WetlandState>(
           builder: (context, state) {
+            // 当 destinations 数量变化（如被 shrink）时，clamp 防止越界。
+            final destCount = widget.destinations?.length ?? 0;
+            final safeIndex = _safeIndex(state.index, destCount);
             return WetlandScope(
               secondaryKeys: _secondaryKeys,
               child: AdaptiveLayout(
@@ -144,7 +154,7 @@ class _WetlandState extends State<Wetland> {
                     Breakpoints.standard: SlotLayout.from(
                       key: const Key('Primary Body MediumLarge'),
                       builder: (_) => widget.destinations != null
-                          ? widget.destinations![state.index].page
+                          ? widget.destinations![safeIndex].page
                           // : Text('test')
                           : widget.primaryBody!,
                     ),
@@ -157,7 +167,7 @@ class _WetlandState extends State<Wetland> {
                           Breakpoints.mediumLargeAndUp: SlotLayout.from(
                             key: const Key('Secondary Body'),
                             builder: (_) => IndexedStack(
-                              index: state.index,
+                              index: safeIndex,
                               children: [
                                 for (var i = 0;
                                     i < widget.destinations!.length;

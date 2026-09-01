@@ -42,23 +42,49 @@ class _HomePage extends StatelessWidget {
   }
 }
 
-class _WetlandHarness extends StatelessWidget {
+/// Stateful 外壳，可在运行时动态增删 destinations，用于测试 shrink clamp。
+class _WetlandHarness extends StatefulWidget {
   const _WetlandHarness();
 
   @override
+  State<_WetlandHarness> createState() => _WetlandHarnessState();
+}
+
+class _WetlandHarnessState extends State<_WetlandHarness> {
+  bool _shrink = false;
+
+  void shrink() => setState(() => _shrink = true);
+
+  @override
   Widget build(BuildContext context) {
-    return Wetland(
-      destinations: [
-        TabDestination(
-          label: 'A',
-          icon: const Icon(Icons.chat),
-          page: _TabBody(label: 'A'),
+    final all = [
+      TabDestination(
+        label: 'A',
+        icon: const Icon(Icons.chat),
+        page: _TabBody(label: 'A'),
+      ),
+      TabDestination(
+        label: 'B',
+        icon: const Icon(Icons.group),
+        page: _TabBody(label: 'B'),
+      ),
+    ];
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Wetland(
+            destinations: _shrink ? all.sublist(0, 1) : all,
+          ),
         ),
-        TabDestination(
-          label: 'B',
-          icon: const Icon(Icons.group),
-          page: _TabBody(label: 'B'),
-        ),
+        if (!_shrink)
+          Positioned(
+            top: 0,
+            right: 0,
+            child: TextButton(
+              onPressed: shrink,
+              child: const Text('shrink-destinations'),
+            ),
+          ),
       ],
     );
   }
@@ -87,7 +113,21 @@ class _DetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: Text('Detail Page')));
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('Detail Page'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => context.wetland.pop(),
+              child: const Text('pop-detail'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -128,5 +168,51 @@ void main() {
     await tester.tap(find.text('A'));
     await tester.pumpAndSettle();
     expect(find.text('Detail Page'), findsOneWidget);
+  });
+
+  testWidgets('WetlandNavigator.pop targets current tab secondary navigator',
+      (tester) async {
+    tester.view.physicalSize = const Size(1200, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      MaterialApp.router(
+        routerConfig: _TestRouter().config(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // tab 0 push 进入详情
+    await tester.tap(find.text('A push'));
+    await tester.pumpAndSettle();
+    expect(find.text('Detail Page'), findsOneWidget);
+
+    // pop 详情，应从当前 tab 的 secondary navigator 弹出
+    await tester.tap(find.text('pop-detail'));
+    await tester.pumpAndSettle();
+    expect(find.text('Detail Page'), findsNothing);
+  });
+
+  testWidgets('Wetland shrink destinations clamps index without crash',
+      (tester) async {
+    tester.view.physicalSize = const Size(1200, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      MaterialApp.router(routerConfig: _TestRouter().config()),
+    );
+    await tester.pumpAndSettle();
+
+    // 切到 tab 1（index 1），再 shrink 掉 B
+    await tester.tap(find.text('B'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('shrink-destinations'));
+    await tester.pumpAndSettle();
+
+    // 仅剩 1 个 destination，不会崩溃；body 显示 tab A 内容
+    expect(find.text('A push'), findsOneWidget);
+    expect(find.text('B push'), findsNothing);
   });
 }

@@ -38,7 +38,11 @@ class BottomNavigation extends StatelessWidget {
           type: BottomNavigationBarType.fixed,
           landscapeLayout: BottomNavigationBarLandscapeLayout
               .linear, // centered, spread, linear
-          currentIndex: state.index,
+          currentIndex: state.index < destinations.length
+              ? state.index
+              : destinations.isEmpty
+                  ? 0
+                  : destinations.length - 1,
           items: destinations
               .map(
                 (e) => BottomNavigationBarItem(

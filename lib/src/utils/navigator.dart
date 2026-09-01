@@ -25,8 +25,13 @@ class WetlandNavigator {
 
   Future<T?> push<T extends Object?>(PageRouteInfo<dynamic> route) async {
     final scope = WetlandScope.maybeOf(context);
+    // 不在 Wetland 子树内（无 scope，必然也无 bloc），直接推入 primary。
+    if (scope == null) {
+      Log.d('Push [${route.routeName}] to [PrimaryBody]');
+      return await AutoRouter.of(context).push<T>(route);
+    }
     final index = context.read<WetlandBloc>().state.index;
-    final key = (scope != null && index < scope.secondaryKeys.length)
+    final key = (index < scope.secondaryKeys.length)
         ? scope.secondaryKeys[index]
         : null;
     if (key != null && key.currentState != null) {
@@ -39,7 +44,19 @@ class WetlandNavigator {
   }
 
   void pop<T extends Object?>([T? result]) {
-    context.router.pop<T>(result);
+    final scope = WetlandScope.maybeOf(context);
+    if (scope == null) {
+      context.router.pop<T>(result);
+      return;
+    }
+    final index = context.read<WetlandBloc>().state.index;
+    final key = (index < scope.secondaryKeys.length)
+        ? scope.secondaryKeys[index]
+        : null;
+    final target = (key != null && key.currentState != null)
+        ? key.currentState!.context
+        : context;
+    AutoRouter.of(target).pop<T>(result);
   }
 }
 

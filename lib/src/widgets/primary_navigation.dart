@@ -64,7 +64,11 @@ class PrimaryNavigation extends StatelessWidget {
                   ),
                 )
                 .toList(),
-            selectedIndex: state.index,
+            selectedIndex: state.index < destinations.length
+                ? state.index
+                : destinations.isEmpty
+                    ? null
+                    : destinations.length - 1,
             onDestinationSelected: (e) =>
                 context.read<WetlandBloc>().add(WetlandEvent.setIndex(e)),
           ),
