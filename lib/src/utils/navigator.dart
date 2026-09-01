@@ -36,24 +36,24 @@ class WetlandNavigator {
   //       secondaryNavigatorKey: secondaryNavigatorKey);
   // }
 
-  Future<void> push(PageRouteInfo<dynamic> route) async {
+  Future<T?> push<T extends Object?>(PageRouteInfo<dynamic> route) async {
     // 判断secondaryBody是否活跃
     if (secondaryNavigatorKey.currentState != null) {
-      // TODO:判断来源是否为secondaryBody：如果是，直接push；如果不是，清空secondaryBody后push
       Log.d('Push [${route.routeName}] to [SecondaryBody]');
-      AutoRouter.of(secondaryNavigatorKey.currentState!.context).push(route);
+      return await AutoRouter.of(secondaryNavigatorKey.currentState!.context)
+          .push<T>(route);
+      // TODO:判断来源是否为secondaryBody
     } else {
       Log.d('Push [${route.routeName}] to [PrimaryBody]');
-      AutoRouter.of(context).push(route);
-      // context.router.push(route);
+      return await AutoRouter.of(context).push<T>(route);
+      // context.router.push<T>(route);
     }
   }
 
-  void pop() {
-    context.router.popForced();
+  void pop<T extends Object?>([T? result]) {
+    context.router.pop<T>(result);
   }
 }
-
 
 //! 重要！！ 堆栈push原则！！
 //! 只要secondaryBody活跃，就push到secondaryBody，否则push到primaryBody
