@@ -1,12 +1,13 @@
 import "package:flutter/material.dart";
 import "package:auto_route/auto_route.dart";
-
+import "package:flutter_bloc/flutter_bloc.dart";
 import "package:flutter_logcat/flutter_logcat.dart";
+
+import "../blocs/wetland_bloc.dart";
+import "wetland_scope.dart";
 
 final GlobalKey<NavigatorState> primaryNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'primaryNavigator');
-final GlobalKey<NavigatorState> secondaryNavigatorKey =
-    GlobalKey<NavigatorState>(debugLabel: 'secondaryNavigator');
 
 /// Extend WetlandNavigator to BuildContext
 ///
@@ -14,39 +15,26 @@ final GlobalKey<NavigatorState> secondaryNavigatorKey =
 /// and push and pop routes.
 /// Like `context.wetland.push(route)` or `context.wetland.pop()`
 extension WetlandNavigationExtension on BuildContext {
-  WetlandNavigator get wetland => WetlandNavigator(this,
-      primaryNavigatorKey: primaryNavigatorKey,
-      secondaryNavigatorKey: secondaryNavigatorKey);
+  WetlandNavigator get wetland => WetlandNavigator(this);
 }
 
 class WetlandNavigator {
   final BuildContext context;
-  final GlobalKey<NavigatorState> primaryNavigatorKey;
-  final GlobalKey<NavigatorState> secondaryNavigatorKey;
 
-  WetlandNavigator(
-    this.context, {
-    required this.primaryNavigatorKey,
-    required this.secondaryNavigatorKey,
-  });
-
-  // static WetlandNavigator of(BuildContext context) {
-  //   return WetlandNavigator(context,
-  //       primaryNavigatorKey: primaryNavigatorKey,
-  //       secondaryNavigatorKey: secondaryNavigatorKey);
-  // }
+  WetlandNavigator(this.context);
 
   Future<T?> push<T extends Object?>(PageRouteInfo<dynamic> route) async {
-    // 判断secondaryBody是否活跃
-    if (secondaryNavigatorKey.currentState != null) {
-      Log.d('Push [${route.routeName}] to [SecondaryBody]');
-      return await AutoRouter.of(secondaryNavigatorKey.currentState!.context)
-          .push<T>(route);
-      // TODO:判断来源是否为secondaryBody
+    final scope = WetlandScope.maybeOf(context);
+    final index = context.read<WetlandBloc>().state.index;
+    final key = (scope != null && index < scope.secondaryKeys.length)
+        ? scope.secondaryKeys[index]
+        : null;
+    if (key != null && key.currentState != null) {
+      Log.d('Push [${route.routeName}] to [SecondaryBody#$index]');
+      return await AutoRouter.of(key.currentState!.context).push<T>(route);
     } else {
       Log.d('Push [${route.routeName}] to [PrimaryBody]');
       return await AutoRouter.of(context).push<T>(route);
-      // context.router.push<T>(route);
     }
   }
 
@@ -56,5 +44,5 @@ class WetlandNavigator {
 }
 
 //! 重要！！ 堆栈push原则！！
-//! 只要secondaryBody活跃，就push到secondaryBody，否则push到primaryBody
+//! 只要secondaryBody活跃，就push到当前tab对应的secondaryBody，否则push到primaryBody
 //! 可以同时适配平板和手机的布局
