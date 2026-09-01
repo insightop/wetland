@@ -8,7 +8,7 @@ void main() {
 }
 
 class WetlandExampleApp extends StatelessWidget {
-  WetlandExampleApp({super.key});
+  const WetlandExampleApp({super.key});
 
   @override
   Widget build(BuildContext context) {

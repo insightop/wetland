@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:auto_route/auto_route.dart';
 
-import '../router/router.dart';
 import 'list_page.dart';
 import 'messages_page.dart';
 import 'contacts_page.dart';
-import 'detail_page.dart';
-import 'login_page.dart';
 import 'mine_page.dart';
-import 'placeholder_page.dart';
 import 'package:wetland/wetland.dart';
 
 @RoutePage()
@@ -23,28 +19,28 @@ class _HomePageState extends State<HomePage> {
   int selectedIndex = 0;
   final destinations = [
     TabDestination(
-      'Message',
-      const Icon(Icons.chat_bubble_outline_rounded),
-      const Icon(Icons.chat_bubble_rounded),
-      const MessagesPage(title: 'Messages'),
+      label: 'Message',
+      icon: const Icon(Icons.chat_bubble_outline_rounded),
+      selectedIcon: const Icon(Icons.chat_bubble_rounded),
+      page: const MessagesPage(title: 'Messages'),
     ),
     TabDestination(
-      'Contact',
-      const Icon(Icons.group_outlined),
-      const Icon(Icons.group_rounded),
-      const ContactsPage(title: 'Contacts'),
+      label: 'Contact',
+      icon: const Icon(Icons.group_outlined),
+      selectedIcon: const Icon(Icons.group_rounded),
+      page: const ContactsPage(title: 'Contacts'),
     ),
     TabDestination(
-      'Discover',
-      const Icon(Icons.explore_outlined),
-      const Icon(Icons.explore),
-      const ListPage(title: 'Discover'),
+      label: 'Discover',
+      icon: const Icon(Icons.explore_outlined),
+      selectedIcon: const Icon(Icons.explore),
+      page: const ListPage(title: 'Discover'),
     ),
     TabDestination(
-      'Mine',
-      const Icon(Icons.person_outlined),
-      const Icon(Icons.person),
-      const MinePage(),
+      label: 'Mine',
+      icon: const Icon(Icons.person_outlined),
+      selectedIcon: const Icon(Icons.person),
+      page: const MinePage(),
     ),
   ];
 

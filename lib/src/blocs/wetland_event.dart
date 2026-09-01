@@ -1,7 +1,7 @@
 part of 'wetland_bloc.dart';
 
 @freezed
-class WetlandEvent with _$WetlandEvent {
-  const factory WetlandEvent.changeDestination(int index) =
-      _WetlandEventChangeDestination;
+sealed class WetlandEvent with _$WetlandEvent {
+  const factory WetlandEvent.setIndex(int index) = _WetlandEventSetIndex;
+  const factory WetlandEvent.setMode(WetlandMode mode) = _WetlandEventSetMode;
 }

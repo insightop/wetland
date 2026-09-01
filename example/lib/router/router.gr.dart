@@ -1,3 +1,4 @@
+// dart format width=80
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
 // **************************************************************************
@@ -8,6 +9,7 @@
 // coverage:ignore-file
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+
 import 'package:auto_route/auto_route.dart' as _i9;
 import 'package:flutter/material.dart' as _i10;
 import 'package:wetland_example/pages/contacts_page.dart' as _i1;
@@ -27,14 +29,11 @@ class ContactsRoute extends _i9.PageRouteInfo<ContactsRouteArgs> {
     _i10.Key? key,
     List<_i9.PageRouteInfo>? children,
   }) : super(
-          ContactsRoute.name,
-          args: ContactsRouteArgs(
-            title: title,
-            key: key,
-          ),
-          rawPathParams: {'title': title},
-          initialChildren: children,
-        );
+         ContactsRoute.name,
+         args: ContactsRouteArgs(title: title, key: key),
+         rawPathParams: {'title': title},
+         initialChildren: children,
+       );
 
   static const String name = 'ContactsRoute';
 
@@ -43,24 +42,16 @@ class ContactsRoute extends _i9.PageRouteInfo<ContactsRouteArgs> {
     builder: (data) {
       final pathParams = data.inheritedPathParams;
       final args = data.argsAs<ContactsRouteArgs>(
-          orElse: () => ContactsRouteArgs(
-                  title: pathParams.getString(
-                'title',
-                'Contacts',
-              )));
-      return _i1.ContactsPage(
-        title: args.title,
-        key: args.key,
+        orElse: () =>
+            ContactsRouteArgs(title: pathParams.getString('title', 'Contacts')),
       );
+      return _i1.ContactsPage(title: args.title, key: args.key);
     },
   );
 }
 
 class ContactsRouteArgs {
-  const ContactsRouteArgs({
-    this.title = 'Contacts',
-    this.key,
-  });
+  const ContactsRouteArgs({this.title = 'Contacts', this.key});
 
   final String title;
 
@@ -70,6 +61,16 @@ class ContactsRouteArgs {
   String toString() {
     return 'ContactsRouteArgs{title: $title, key: $key}';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! ContactsRouteArgs) return false;
+    return title == other.title && key == other.key;
+  }
+
+  @override
+  int get hashCode => title.hashCode ^ key.hashCode;
 }
 
 /// generated route for
@@ -80,14 +81,11 @@ class DetailRoute extends _i9.PageRouteInfo<DetailRouteArgs> {
     _i10.Key? key,
     List<_i9.PageRouteInfo>? children,
   }) : super(
-          DetailRoute.name,
-          args: DetailRouteArgs(
-            title: title,
-            key: key,
-          ),
-          rawPathParams: {'title': title},
-          initialChildren: children,
-        );
+         DetailRoute.name,
+         args: DetailRouteArgs(title: title, key: key),
+         rawPathParams: {'title': title},
+         initialChildren: children,
+       );
 
   static const String name = 'DetailRoute';
 
@@ -96,24 +94,16 @@ class DetailRoute extends _i9.PageRouteInfo<DetailRouteArgs> {
     builder: (data) {
       final pathParams = data.inheritedPathParams;
       final args = data.argsAs<DetailRouteArgs>(
-          orElse: () => DetailRouteArgs(
-                  title: pathParams.getString(
-                'title',
-                'Detail',
-              )));
-      return _i2.DetailPage(
-        title: args.title,
-        key: args.key,
+        orElse: () =>
+            DetailRouteArgs(title: pathParams.getString('title', 'Detail')),
       );
+      return _i2.DetailPage(title: args.title, key: args.key);
     },
   );
 }
 
 class DetailRouteArgs {
-  const DetailRouteArgs({
-    this.title = 'Detail',
-    this.key,
-  });
+  const DetailRouteArgs({this.title = 'Detail', this.key});
 
   final String title;
 
@@ -123,16 +113,23 @@ class DetailRouteArgs {
   String toString() {
     return 'DetailRouteArgs{title: $title, key: $key}';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! DetailRouteArgs) return false;
+    return title == other.title && key == other.key;
+  }
+
+  @override
+  int get hashCode => title.hashCode ^ key.hashCode;
 }
 
 /// generated route for
 /// [_i3.HomePage]
 class HomeRoute extends _i9.PageRouteInfo<void> {
   const HomeRoute({List<_i9.PageRouteInfo>? children})
-      : super(
-          HomeRoute.name,
-          initialChildren: children,
-        );
+    : super(HomeRoute.name, initialChildren: children);
 
   static const String name = 'HomeRoute';
 
@@ -152,14 +149,11 @@ class ListRoute extends _i9.PageRouteInfo<ListRouteArgs> {
     _i10.Key? key,
     List<_i9.PageRouteInfo>? children,
   }) : super(
-          ListRoute.name,
-          args: ListRouteArgs(
-            title: title,
-            key: key,
-          ),
-          rawPathParams: {'title': title},
-          initialChildren: children,
-        );
+         ListRoute.name,
+         args: ListRouteArgs(title: title, key: key),
+         rawPathParams: {'title': title},
+         initialChildren: children,
+       );
 
   static const String name = 'ListRoute';
 
@@ -168,24 +162,16 @@ class ListRoute extends _i9.PageRouteInfo<ListRouteArgs> {
     builder: (data) {
       final pathParams = data.inheritedPathParams;
       final args = data.argsAs<ListRouteArgs>(
-          orElse: () => ListRouteArgs(
-                  title: pathParams.getString(
-                'title',
-                'List',
-              )));
-      return _i4.ListPage(
-        title: args.title,
-        key: args.key,
+        orElse: () =>
+            ListRouteArgs(title: pathParams.getString('title', 'List')),
       );
+      return _i4.ListPage(title: args.title, key: args.key);
     },
   );
 }
 
 class ListRouteArgs {
-  const ListRouteArgs({
-    this.title = 'List',
-    this.key,
-  });
+  const ListRouteArgs({this.title = 'List', this.key});
 
   final String title;
 
@@ -195,16 +181,23 @@ class ListRouteArgs {
   String toString() {
     return 'ListRouteArgs{title: $title, key: $key}';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! ListRouteArgs) return false;
+    return title == other.title && key == other.key;
+  }
+
+  @override
+  int get hashCode => title.hashCode ^ key.hashCode;
 }
 
 /// generated route for
 /// [_i5.LoginPage]
 class LoginRoute extends _i9.PageRouteInfo<void> {
   const LoginRoute({List<_i9.PageRouteInfo>? children})
-      : super(
-          LoginRoute.name,
-          initialChildren: children,
-        );
+    : super(LoginRoute.name, initialChildren: children);
 
   static const String name = 'LoginRoute';
 
@@ -224,14 +217,11 @@ class MessagesRoute extends _i9.PageRouteInfo<MessagesRouteArgs> {
     _i10.Key? key,
     List<_i9.PageRouteInfo>? children,
   }) : super(
-          MessagesRoute.name,
-          args: MessagesRouteArgs(
-            title: title,
-            key: key,
-          ),
-          rawPathParams: {'title': title},
-          initialChildren: children,
-        );
+         MessagesRoute.name,
+         args: MessagesRouteArgs(title: title, key: key),
+         rawPathParams: {'title': title},
+         initialChildren: children,
+       );
 
   static const String name = 'MessagesRoute';
 
@@ -240,24 +230,16 @@ class MessagesRoute extends _i9.PageRouteInfo<MessagesRouteArgs> {
     builder: (data) {
       final pathParams = data.inheritedPathParams;
       final args = data.argsAs<MessagesRouteArgs>(
-          orElse: () => MessagesRouteArgs(
-                  title: pathParams.getString(
-                'title',
-                'Messages',
-              )));
-      return _i6.MessagesPage(
-        title: args.title,
-        key: args.key,
+        orElse: () =>
+            MessagesRouteArgs(title: pathParams.getString('title', 'Messages')),
       );
+      return _i6.MessagesPage(title: args.title, key: args.key);
     },
   );
 }
 
 class MessagesRouteArgs {
-  const MessagesRouteArgs({
-    this.title = 'Messages',
-    this.key,
-  });
+  const MessagesRouteArgs({this.title = 'Messages', this.key});
 
   final String title;
 
@@ -267,16 +249,23 @@ class MessagesRouteArgs {
   String toString() {
     return 'MessagesRouteArgs{title: $title, key: $key}';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! MessagesRouteArgs) return false;
+    return title == other.title && key == other.key;
+  }
+
+  @override
+  int get hashCode => title.hashCode ^ key.hashCode;
 }
 
 /// generated route for
 /// [_i7.MinePage]
 class MineRoute extends _i9.PageRouteInfo<void> {
   const MineRoute({List<_i9.PageRouteInfo>? children})
-      : super(
-          MineRoute.name,
-          initialChildren: children,
-        );
+    : super(MineRoute.name, initialChildren: children);
 
   static const String name = 'MineRoute';
 
@@ -292,10 +281,7 @@ class MineRoute extends _i9.PageRouteInfo<void> {
 /// [_i8.PlaceholderPage]
 class PlaceholderRoute extends _i9.PageRouteInfo<void> {
   const PlaceholderRoute({List<_i9.PageRouteInfo>? children})
-      : super(
-          PlaceholderRoute.name,
-          initialChildren: children,
-        );
+    : super(PlaceholderRoute.name, initialChildren: children);
 
   static const String name = 'PlaceholderRoute';
 

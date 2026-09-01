@@ -1,9 +1,9 @@
 part of 'wetland_bloc.dart';
 
 @freezed
-class WetlandState with _$WetlandState {
+sealed class WetlandState with _$WetlandState {
   const factory WetlandState.pageState({
-    @Default(0) int selectedDestination, // 当前选中的标签
-    @Default(false) bool isSecondaryActive, //  次级页面是否活跃
+    @Default(0) int index, // 当前选中的标签
+    @Default(WetlandMode.dual) WetlandMode mode, // 当前模式
   }) = _WetlandStatePageState;
 }

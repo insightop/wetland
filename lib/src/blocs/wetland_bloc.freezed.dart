@@ -1,6 +1,6 @@
-// coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// ignore_for_file: type=lint
+// coverage:ignore-file
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'wetland_bloc.dart';
@@ -9,482 +9,564 @@ part of 'wetland_bloc.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format off
 T _$identity<T>(T value) => value;
-
-final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
-
 /// @nodoc
 mixin _$WetlandEvent {
-  int get index => throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function(int index) changeDestination,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(int index)? changeDestination,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function(int index)? changeDestination,
-    required TResult orElse(),
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(_WetlandEventChangeDestination value)
-        changeDestination,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(_WetlandEventChangeDestination value)? changeDestination,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(_WetlandEventChangeDestination value)? changeDestination,
-    required TResult orElse(),
-  }) =>
-      throw _privateConstructorUsedError;
 
-  /// Create a copy of WetlandEvent
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $WetlandEventCopyWith<WetlandEvent> get copyWith =>
-      throw _privateConstructorUsedError;
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is WetlandEvent);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'WetlandEvent()';
+}
+
+
 }
 
 /// @nodoc
-abstract class $WetlandEventCopyWith<$Res> {
-  factory $WetlandEventCopyWith(
-          WetlandEvent value, $Res Function(WetlandEvent) then) =
-      _$WetlandEventCopyWithImpl<$Res, WetlandEvent>;
-  @useResult
-  $Res call({int index});
+class $WetlandEventCopyWith<$Res>  {
+$WetlandEventCopyWith(WetlandEvent _, $Res Function(WetlandEvent) __);
+}
+
+
+/// Adds pattern-matching-related methods to [WetlandEvent].
+extension WetlandEventPatterns on WetlandEvent {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _WetlandEventSetIndex value)?  setIndex,TResult Function( _WetlandEventSetMode value)?  setMode,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _WetlandEventSetIndex() when setIndex != null:
+return setIndex(_that);case _WetlandEventSetMode() when setMode != null:
+return setMode(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _WetlandEventSetIndex value)  setIndex,required TResult Function( _WetlandEventSetMode value)  setMode,}){
+final _that = this;
+switch (_that) {
+case _WetlandEventSetIndex():
+return setIndex(_that);case _WetlandEventSetMode():
+return setMode(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _WetlandEventSetIndex value)?  setIndex,TResult? Function( _WetlandEventSetMode value)?  setMode,}){
+final _that = this;
+switch (_that) {
+case _WetlandEventSetIndex() when setIndex != null:
+return setIndex(_that);case _WetlandEventSetMode() when setMode != null:
+return setMode(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int index)?  setIndex,TResult Function( WetlandMode mode)?  setMode,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _WetlandEventSetIndex() when setIndex != null:
+return setIndex(_that.index);case _WetlandEventSetMode() when setMode != null:
+return setMode(_that.mode);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int index)  setIndex,required TResult Function( WetlandMode mode)  setMode,}) {final _that = this;
+switch (_that) {
+case _WetlandEventSetIndex():
+return setIndex(_that.index);case _WetlandEventSetMode():
+return setMode(_that.mode);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int index)?  setIndex,TResult? Function( WetlandMode mode)?  setMode,}) {final _that = this;
+switch (_that) {
+case _WetlandEventSetIndex() when setIndex != null:
+return setIndex(_that.index);case _WetlandEventSetMode() when setMode != null:
+return setMode(_that.mode);case _:
+  return null;
+
+}
+}
+
 }
 
 /// @nodoc
-class _$WetlandEventCopyWithImpl<$Res, $Val extends WetlandEvent>
-    implements $WetlandEventCopyWith<$Res> {
-  _$WetlandEventCopyWithImpl(this._value, this._then);
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
 
-  /// Create a copy of WetlandEvent
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? index = null,
-  }) {
-    return _then(_value.copyWith(
-      index: null == index
-          ? _value.index
-          : index // ignore: cast_nullable_to_non_nullable
-              as int,
-    ) as $Val);
-  }
+class _WetlandEventSetIndex implements WetlandEvent {
+  const _WetlandEventSetIndex(this.index);
+  
+
+ final  int index;
+
+/// Create a copy of WetlandEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$WetlandEventSetIndexCopyWith<_WetlandEventSetIndex> get copyWith => __$WetlandEventSetIndexCopyWithImpl<_WetlandEventSetIndex>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WetlandEventSetIndex&&(identical(other.index, index) || other.index == index));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,index);
+}
+
+@override
+String toString() {
+    return 'WetlandEvent.setIndex(index: $index)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$WetlandEventChangeDestinationImplCopyWith<$Res>
-    implements $WetlandEventCopyWith<$Res> {
-  factory _$$WetlandEventChangeDestinationImplCopyWith(
-          _$WetlandEventChangeDestinationImpl value,
-          $Res Function(_$WetlandEventChangeDestinationImpl) then) =
-      __$$WetlandEventChangeDestinationImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({int index});
+abstract mixin class _$WetlandEventSetIndexCopyWith<$Res> implements $WetlandEventCopyWith<$Res> {
+  factory _$WetlandEventSetIndexCopyWith(_WetlandEventSetIndex value, $Res Function(_WetlandEventSetIndex) _then) = __$WetlandEventSetIndexCopyWithImpl;
+@useResult
+$Res call({
+ int index
+});
+
+
+
+
+}
+/// @nodoc
+class __$WetlandEventSetIndexCopyWithImpl<$Res>
+    implements _$WetlandEventSetIndexCopyWith<$Res> {
+  __$WetlandEventSetIndexCopyWithImpl(this._self, this._then);
+
+  final _WetlandEventSetIndex _self;
+  final $Res Function(_WetlandEventSetIndex) _then;
+
+/// Create a copy of WetlandEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? index = null,}) {
+  return _then(_WetlandEventSetIndex(
+null == index ? _self.index : index // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
 }
 
-/// @nodoc
-class __$$WetlandEventChangeDestinationImplCopyWithImpl<$Res>
-    extends _$WetlandEventCopyWithImpl<$Res,
-        _$WetlandEventChangeDestinationImpl>
-    implements _$$WetlandEventChangeDestinationImplCopyWith<$Res> {
-  __$$WetlandEventChangeDestinationImplCopyWithImpl(
-      _$WetlandEventChangeDestinationImpl _value,
-      $Res Function(_$WetlandEventChangeDestinationImpl) _then)
-      : super(_value, _then);
 
-  /// Create a copy of WetlandEvent
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? index = null,
-  }) {
-    return _then(_$WetlandEventChangeDestinationImpl(
-      null == index
-          ? _value.index
-          : index // ignore: cast_nullable_to_non_nullable
-              as int,
-    ));
-  }
 }
 
 /// @nodoc
 
-class _$WetlandEventChangeDestinationImpl
-    implements _WetlandEventChangeDestination {
-  const _$WetlandEventChangeDestinationImpl(this.index);
 
-  @override
-  final int index;
+class _WetlandEventSetMode implements WetlandEvent {
+  const _WetlandEventSetMode(this.mode);
+  
 
-  @override
-  String toString() {
-    return 'WetlandEvent.changeDestination(index: $index)';
-  }
+ final  WetlandMode mode;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$WetlandEventChangeDestinationImpl &&
-            (identical(other.index, index) || other.index == index));
-  }
+/// Create a copy of WetlandEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$WetlandEventSetModeCopyWith<_WetlandEventSetMode> get copyWith => __$WetlandEventSetModeCopyWithImpl<_WetlandEventSetMode>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, index);
 
-  /// Create a copy of WetlandEvent
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$WetlandEventChangeDestinationImplCopyWith<
-          _$WetlandEventChangeDestinationImpl>
-      get copyWith => __$$WetlandEventChangeDestinationImplCopyWithImpl<
-          _$WetlandEventChangeDestinationImpl>(this, _$identity);
 
-  @override
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function(int index) changeDestination,
-  }) {
-    return changeDestination(index);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(int index)? changeDestination,
-  }) {
-    return changeDestination?.call(index);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function(int index)? changeDestination,
-    required TResult orElse(),
-  }) {
-    if (changeDestination != null) {
-      return changeDestination(index);
-    }
-    return orElse();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(_WetlandEventChangeDestination value)
-        changeDestination,
-  }) {
-    return changeDestination(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(_WetlandEventChangeDestination value)? changeDestination,
-  }) {
-    return changeDestination?.call(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(_WetlandEventChangeDestination value)? changeDestination,
-    required TResult orElse(),
-  }) {
-    if (changeDestination != null) {
-      return changeDestination(this);
-    }
-    return orElse();
-  }
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WetlandEventSetMode&&(identical(other.mode, mode) || other.mode == mode));
 }
 
-abstract class _WetlandEventChangeDestination implements WetlandEvent {
-  const factory _WetlandEventChangeDestination(final int index) =
-      _$WetlandEventChangeDestinationImpl;
 
-  @override
-  int get index;
+@override
+int get hashCode {
+    return Object.hash(runtimeType,mode);
+}
 
-  /// Create a copy of WetlandEvent
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$WetlandEventChangeDestinationImplCopyWith<
-          _$WetlandEventChangeDestinationImpl>
-      get copyWith => throw _privateConstructorUsedError;
+@override
+String toString() {
+    return 'WetlandEvent.setMode(mode: $mode)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$WetlandEventSetModeCopyWith<$Res> implements $WetlandEventCopyWith<$Res> {
+  factory _$WetlandEventSetModeCopyWith(_WetlandEventSetMode value, $Res Function(_WetlandEventSetMode) _then) = __$WetlandEventSetModeCopyWithImpl;
+@useResult
+$Res call({
+ WetlandMode mode
+});
+
+
+
+
+}
+/// @nodoc
+class __$WetlandEventSetModeCopyWithImpl<$Res>
+    implements _$WetlandEventSetModeCopyWith<$Res> {
+  __$WetlandEventSetModeCopyWithImpl(this._self, this._then);
+
+  final _WetlandEventSetMode _self;
+  final $Res Function(_WetlandEventSetMode) _then;
+
+/// Create a copy of WetlandEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? mode = null,}) {
+  return _then(_WetlandEventSetMode(
+null == mode ? _self.mode : mode // ignore: cast_nullable_to_non_nullable
+as WetlandMode,
+  ));
+}
+
+
 }
 
 /// @nodoc
 mixin _$WetlandState {
-  int get selectedDestination => throw _privateConstructorUsedError; // 当前选中的标签
-  bool get isSecondaryActive => throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function(int selectedDestination, bool isSecondaryActive)
-        pageState,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(int selectedDestination, bool isSecondaryActive)?
-        pageState,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function(int selectedDestination, bool isSecondaryActive)?
-        pageState,
-    required TResult orElse(),
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(_WetlandStatePageState value) pageState,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(_WetlandStatePageState value)? pageState,
-  }) =>
-      throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(_WetlandStatePageState value)? pageState,
-    required TResult orElse(),
-  }) =>
-      throw _privateConstructorUsedError;
 
-  /// Create a copy of WetlandState
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $WetlandStateCopyWith<WetlandState> get copyWith =>
-      throw _privateConstructorUsedError;
+ int get index; WetlandMode get mode;
+/// Create a copy of WetlandState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$WetlandStateCopyWith<WetlandState> get copyWith => _$WetlandStateCopyWithImpl<WetlandState>(this as WetlandState, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as WetlandState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WetlandState&&(identical(other.index, _this.index) || other.index == _this.index)&&(identical(other.mode, _this.mode) || other.mode == _this.mode));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as WetlandState;
+  return Object.hash(runtimeType,_this.index,_this.mode);
+}
+
+@override
+String toString() {
+  final _this = this as WetlandState;
+  return 'WetlandState(index: ${_this.index}, mode: ${_this.mode})';
+}
+
+
 }
 
 /// @nodoc
-abstract class $WetlandStateCopyWith<$Res> {
-  factory $WetlandStateCopyWith(
-          WetlandState value, $Res Function(WetlandState) then) =
-      _$WetlandStateCopyWithImpl<$Res, WetlandState>;
-  @useResult
-  $Res call({int selectedDestination, bool isSecondaryActive});
-}
+abstract mixin class $WetlandStateCopyWith<$Res>  {
+  factory $WetlandStateCopyWith(WetlandState value, $Res Function(WetlandState) _then) = _$WetlandStateCopyWithImpl;
+@useResult
+$Res call({
+ int index, WetlandMode mode
+});
 
+
+
+
+}
 /// @nodoc
-class _$WetlandStateCopyWithImpl<$Res, $Val extends WetlandState>
+class _$WetlandStateCopyWithImpl<$Res>
     implements $WetlandStateCopyWith<$Res> {
-  _$WetlandStateCopyWithImpl(this._value, this._then);
+  _$WetlandStateCopyWithImpl(this._self, this._then);
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
+  final WetlandState _self;
+  final $Res Function(WetlandState) _then;
 
-  /// Create a copy of WetlandState
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? selectedDestination = null,
-    Object? isSecondaryActive = null,
-  }) {
-    return _then(_value.copyWith(
-      selectedDestination: null == selectedDestination
-          ? _value.selectedDestination
-          : selectedDestination // ignore: cast_nullable_to_non_nullable
-              as int,
-      isSecondaryActive: null == isSecondaryActive
-          ? _value.isSecondaryActive
-          : isSecondaryActive // ignore: cast_nullable_to_non_nullable
-              as bool,
-    ) as $Val);
-  }
+/// Create a copy of WetlandState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? index = null,Object? mode = null,}) {
+  return _then(WetlandState.pageState(
+index: null == index ? _self.index : index // ignore: cast_nullable_to_non_nullable
+as int,mode: null == mode ? _self.mode : mode // ignore: cast_nullable_to_non_nullable
+as WetlandMode,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [WetlandState].
+extension WetlandStatePatterns on WetlandState {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _WetlandStatePageState value)?  pageState,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _WetlandStatePageState() when pageState != null:
+return pageState(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _WetlandStatePageState value)  pageState,}){
+final _that = this;
+switch (_that) {
+case _WetlandStatePageState():
+return pageState(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _WetlandStatePageState value)?  pageState,}){
+final _that = this;
+switch (_that) {
+case _WetlandStatePageState() when pageState != null:
+return pageState(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int index,  WetlandMode mode)?  pageState,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _WetlandStatePageState() when pageState != null:
+return pageState(_that.index,_that.mode);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int index,  WetlandMode mode)  pageState,}) {final _that = this;
+switch (_that) {
+case _WetlandStatePageState():
+return pageState(_that.index,_that.mode);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int index,  WetlandMode mode)?  pageState,}) {final _that = this;
+switch (_that) {
+case _WetlandStatePageState() when pageState != null:
+return pageState(_that.index,_that.mode);case _:
+  return null;
+
+}
+}
+
 }
 
 /// @nodoc
-abstract class _$$WetlandStatePageStateImplCopyWith<$Res>
-    implements $WetlandStateCopyWith<$Res> {
-  factory _$$WetlandStatePageStateImplCopyWith(
-          _$WetlandStatePageStateImpl value,
-          $Res Function(_$WetlandStatePageStateImpl) then) =
-      __$$WetlandStatePageStateImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({int selectedDestination, bool isSecondaryActive});
+
+
+class _WetlandStatePageState implements WetlandState {
+  const _WetlandStatePageState({this.index = 0, this.mode = WetlandMode.dual});
+  
+
+@override@JsonKey() final  int index;
+@override@JsonKey() final  WetlandMode mode;
+
+/// Create a copy of WetlandState
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$WetlandStatePageStateCopyWith<_WetlandStatePageState> get copyWith => __$WetlandStatePageStateCopyWithImpl<_WetlandStatePageState>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WetlandStatePageState&&(identical(other.index, index) || other.index == index)&&(identical(other.mode, mode) || other.mode == mode));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,index,mode);
+}
+
+@override
+String toString() {
+    return 'WetlandState.pageState(index: $index, mode: $mode)';
+}
+
+
 }
 
 /// @nodoc
-class __$$WetlandStatePageStateImplCopyWithImpl<$Res>
-    extends _$WetlandStateCopyWithImpl<$Res, _$WetlandStatePageStateImpl>
-    implements _$$WetlandStatePageStateImplCopyWith<$Res> {
-  __$$WetlandStatePageStateImplCopyWithImpl(_$WetlandStatePageStateImpl _value,
-      $Res Function(_$WetlandStatePageStateImpl) _then)
-      : super(_value, _then);
+abstract mixin class _$WetlandStatePageStateCopyWith<$Res> implements $WetlandStateCopyWith<$Res> {
+  factory _$WetlandStatePageStateCopyWith(_WetlandStatePageState value, $Res Function(_WetlandStatePageState) _then) = __$WetlandStatePageStateCopyWithImpl;
+@override @useResult
+$Res call({
+ int index, WetlandMode mode
+});
 
-  /// Create a copy of WetlandState
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? selectedDestination = null,
-    Object? isSecondaryActive = null,
-  }) {
-    return _then(_$WetlandStatePageStateImpl(
-      selectedDestination: null == selectedDestination
-          ? _value.selectedDestination
-          : selectedDestination // ignore: cast_nullable_to_non_nullable
-              as int,
-      isSecondaryActive: null == isSecondaryActive
-          ? _value.isSecondaryActive
-          : isSecondaryActive // ignore: cast_nullable_to_non_nullable
-              as bool,
-    ));
-  }
+
+
+
 }
-
 /// @nodoc
+class __$WetlandStatePageStateCopyWithImpl<$Res>
+    implements _$WetlandStatePageStateCopyWith<$Res> {
+  __$WetlandStatePageStateCopyWithImpl(this._self, this._then);
 
-class _$WetlandStatePageStateImpl implements _WetlandStatePageState {
-  const _$WetlandStatePageStateImpl(
-      {this.selectedDestination = 0, this.isSecondaryActive = false});
+  final _WetlandStatePageState _self;
+  final $Res Function(_WetlandStatePageState) _then;
 
-  @override
-  @JsonKey()
-  final int selectedDestination;
-// 当前选中的标签
-  @override
-  @JsonKey()
-  final bool isSecondaryActive;
-
-  @override
-  String toString() {
-    return 'WetlandState.pageState(selectedDestination: $selectedDestination, isSecondaryActive: $isSecondaryActive)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$WetlandStatePageStateImpl &&
-            (identical(other.selectedDestination, selectedDestination) ||
-                other.selectedDestination == selectedDestination) &&
-            (identical(other.isSecondaryActive, isSecondaryActive) ||
-                other.isSecondaryActive == isSecondaryActive));
-  }
-
-  @override
-  int get hashCode =>
-      Object.hash(runtimeType, selectedDestination, isSecondaryActive);
-
-  /// Create a copy of WetlandState
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$WetlandStatePageStateImplCopyWith<_$WetlandStatePageStateImpl>
-      get copyWith => __$$WetlandStatePageStateImplCopyWithImpl<
-          _$WetlandStatePageStateImpl>(this, _$identity);
-
-  @override
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function(int selectedDestination, bool isSecondaryActive)
-        pageState,
-  }) {
-    return pageState(selectedDestination, isSecondaryActive);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(int selectedDestination, bool isSecondaryActive)?
-        pageState,
-  }) {
-    return pageState?.call(selectedDestination, isSecondaryActive);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function(int selectedDestination, bool isSecondaryActive)?
-        pageState,
-    required TResult orElse(),
-  }) {
-    if (pageState != null) {
-      return pageState(selectedDestination, isSecondaryActive);
-    }
-    return orElse();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(_WetlandStatePageState value) pageState,
-  }) {
-    return pageState(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(_WetlandStatePageState value)? pageState,
-  }) {
-    return pageState?.call(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(_WetlandStatePageState value)? pageState,
-    required TResult orElse(),
-  }) {
-    if (pageState != null) {
-      return pageState(this);
-    }
-    return orElse();
-  }
+/// Create a copy of WetlandState
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? index = null,Object? mode = null,}) {
+  return _then(_WetlandStatePageState(
+index: null == index ? _self.index : index // ignore: cast_nullable_to_non_nullable
+as int,mode: null == mode ? _self.mode : mode // ignore: cast_nullable_to_non_nullable
+as WetlandMode,
+  ));
 }
 
-abstract class _WetlandStatePageState implements WetlandState {
-  const factory _WetlandStatePageState(
-      {final int selectedDestination,
-      final bool isSecondaryActive}) = _$WetlandStatePageStateImpl;
 
-  @override
-  int get selectedDestination; // 当前选中的标签
-  @override
-  bool get isSecondaryActive;
-
-  /// Create a copy of WetlandState
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$WetlandStatePageStateImplCopyWith<_$WetlandStatePageStateImpl>
-      get copyWith => throw _privateConstructorUsedError;
 }
+
+// dart format on

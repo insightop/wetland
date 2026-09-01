@@ -6,19 +6,25 @@ part 'wetland_state.dart';
 
 part 'wetland_bloc.freezed.dart';
 
+enum WetlandMode {
+  dual,
+  single,
+}
+
 class WetlandBloc extends Bloc<WetlandEvent, WetlandState> {
   WetlandBloc() : super(const WetlandState.pageState()) {
     on<WetlandEvent>((event, emit) => _handleEvent(event, emit));
   }
 
   void _handleEvent(WetlandEvent event, Emitter<WetlandState> emit) {
-    event.when(
-      changeDestination: (index) =>
-          emit(WetlandState.pageState(selectedDestination: index)),
-    );
+    switch (event) {
+      case _WetlandEventSetIndex(:final index):
+        emit(WetlandState.pageState(index: index, mode: state.mode));
+      case _WetlandEventSetMode(:final mode):
+        emit(WetlandState.pageState(index: state.index, mode: mode));
+    }
   }
 }
-
 
 // class RootController extends GetxController {
 //   // 次要页面
