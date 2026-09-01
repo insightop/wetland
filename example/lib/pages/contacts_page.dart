@@ -4,7 +4,6 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import 'package:wetland/wetland.dart';
 import '../router/router.gr.dart';
-import 'detail_page.dart';
 
 @RoutePage()
 class ContactsPage extends StatelessWidget {
@@ -30,11 +29,11 @@ class ContactsPage extends StatelessWidget {
               ),
               trailing: Icon(Icons.arrow_forward_ios),
               title: Skeletonizer(
-                effect: SoldColorEffect(),
+                effect: SolidColorEffect(),
                 child: Text('$title $index'),
               ),
               subtitle: Skeletonizer(
-                effect: SoldColorEffect(),
+                effect: SolidColorEffect(),
                 child: Text('click to show detail'),
               ),
               onTap: () => context.wetland.push(DetailRoute(title: title)),

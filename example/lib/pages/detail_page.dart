@@ -33,13 +33,13 @@ class DetailPage extends StatelessWidget {
         body: Column(
           children: [
             Skeletonizer(
-              effect: SoldColorEffect(),
+              effect: SolidColorEffect(),
               child: ListTile(
                 isThreeLine: true,
                 leading: CircleAvatar(),
                 // trailing: Icon(Icons.arrow_forward_ios),
                 title: Text('$title Detail '),
-                subtitle: Container(
+                subtitle: SizedBox(
                   height: 500,
                   child: Wrap(children: [
                     Text('${List.generate(100, (index) => 'wetland')}')
