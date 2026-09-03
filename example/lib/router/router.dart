@@ -22,8 +22,13 @@ class AppRouter extends RootStackRouter {
           AutoRoute(page: ContactsRoute.page),
           //! Mine
           AutoRoute(page: MineRoute.page),
-          //! Detail
+          //! Detail（横屏 secondary 详情栈使用：Home child collection）
           AutoRoute(page: DetailRoute.page),
         ]),
+        //! Detail（竖屏全屏详情使用：根级 route，覆盖底部导航）
+        //! 与 Home 下的 Detail 同名分属不同 collection，互不冲突。
+        //! 竖屏时 secondary 未挂载，wetland push 落到根 router，命中此根级 Detail；
+        //! 横屏时 wetland push 落到当前 tab 的 secondary router，命中 Home 下的 Detail。
+        AutoRoute(page: DetailRoute.page),
       ];
 }
