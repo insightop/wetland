@@ -3,8 +3,13 @@ import "package:flutter_bloc/flutter_bloc.dart";
 import "../blocs/wetland_bloc.dart";
 import "../utils/destination.dart";
 
+/// 竖屏（single 模式）下的底部导航栏。
+///
+/// 根据 [destinations] 渲染底部 tab，点击时通过 [WetlandBloc] 切换当前主 tab。
 class BottomNavigation extends StatelessWidget {
+  /// 底部导航的 tab 配置列表。
   final List<TabDestination> destinations;
+
   const BottomNavigation(this.destinations, {super.key});
 
   @override

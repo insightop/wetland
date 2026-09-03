@@ -15,17 +15,36 @@ import "widgets/secondary_body.dart";
 import "utils/destination.dart";
 import "utils/wetland_scope.dart";
 
+/// 逻辑异或：仅当 [a]、[b] 恰好一个为真时返回 true。
 bool logicalXor(bool a, bool b) {
   return (a || b) && !(a && b);
 }
 
+/// 自适应导航根组件。
+///
+/// 根据屏幕尺寸自动切换布局：
+/// - 横屏/宽屏（mediumLargeAndUp）：三栏布局，左侧主导航 + 中间主内容 + 右侧详情面板。
+/// - 竖屏/窄屏：单栏布局，底部导航 + 主内容全屏。
+///
+/// 每个主 tab 维护独立的右侧详情导航栈，切换 tab 时详情保留不丢。
+/// 通过 [destinations] 或 [primaryBody] 二选一配置内容。
 class Wetland extends StatefulWidget {
+  /// 主 tab 配置列表（横屏主导航 / 竖屏底部导航 + 中间 body）。
   final List<TabDestination>? destinations;
+
+  /// 自定义主内容（当不使用 [destinations] 时）。
   final Widget? primaryBody;
-  // final Widget placeholder;
+
+  /// 布局切换过渡动画时长。
   final Duration transitionDuration;
+
+  /// 主导航栏顶部自定义组件。
   final Widget? primaryNavigationRailLeading;
+
+  /// 主导航栏底部自定义组件。
   final Widget? primaryNavigationRailTrailing;
+
+  /// 是否使用抽屉式导航（预留）。
   final bool useDrawer;
 
   Wetland({

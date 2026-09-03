@@ -1,10 +1,10 @@
 name: wetland
 
-description: Adaptive navigation on any device for Flutter
+description: Adaptive navigation framework for Flutter. Three-column layout with per-tab detail stacks, auto_route based, works on phone, tablet and desktop.
 homepage: https://github.com/insightop/wetland
 repository: https://github.com/insightop/wetland
 issue_tracker: https://github.com/insightop/wetland/issues
-version: 0.0.1
+version: 0.1.0
 
 environment:
   sdk: ">=3.10.0 <4.0.0"

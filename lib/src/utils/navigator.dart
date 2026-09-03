@@ -6,18 +6,22 @@ import "package:flutter_logcat/flutter_logcat.dart";
 import "../blocs/wetland_bloc.dart";
 import "wetland_scope.dart";
 
+/// 主内容导航器的全局 key（预留，供 primary 导航使用）。
 final GlobalKey<NavigatorState> primaryNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'primaryNavigator');
 
-/// Extend WetlandNavigator to BuildContext
+/// 扩展 [BuildContext] 以便捷获取 [WetlandNavigator]。
 ///
-/// Convenient way to get WetlandNavigator from BuildContext,
-/// and push and pop routes.
-/// Like `context.wetland.push(route)` or `context.wetland.pop()`
+/// 用法：`context.wetland.push(route)` 或 `context.wetland.pop()`。
 extension WetlandNavigationExtension on BuildContext {
   WetlandNavigator get wetland => WetlandNavigator(this);
 }
 
+/// 面向 wetland 的导航助手。
+///
+/// 根据调用来源与当前布局模式，把路由推入正确的导航栈：
+/// - 横屏下推入当前主 tab 的右侧详情栈（secondary）；
+/// - 竖屏下推入主内容栈（primary）。
 class WetlandNavigator {
   final BuildContext context;
 

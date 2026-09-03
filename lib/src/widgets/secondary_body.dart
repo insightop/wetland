@@ -6,9 +6,12 @@ import 'package:flutter/material.dart';
 /// 每个主 tab 一个独立的 [AutoRouter]，各自维护独立的详情栈，
 /// 因此切换主 tab 时详情栈不丢失。
 class SecondaryBody extends StatefulWidget {
+  /// 该 secondary 导航器的 key。
   final GlobalKey<NavigatorState> navigatorKey;
+
   /// 挂载后可安全读取 [StackRouter] 时回调（用于 mode 迁移等）。
   final void Function(int index, StackRouter router)? onRouterReady;
+
   /// 该 secondary 在 destinations 中的下标。
   final int? index;
 

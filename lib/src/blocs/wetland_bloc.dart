@@ -6,11 +6,16 @@ part 'wetland_state.dart';
 
 part 'wetland_bloc.freezed.dart';
 
+/// 布局模式。
 enum WetlandMode {
+  /// 双屏模式（横屏/宽屏）：主导航 + 主内容 + 右侧详情。
   dual,
+
+  /// 单屏模式（竖屏/窄屏）：底部导航 + 主内容全屏。
   single,
 }
 
+/// 管理当前主 tab 下标与布局模式的 Bloc。
 class WetlandBloc extends Bloc<WetlandEvent, WetlandState> {
   WetlandBloc() : super(const WetlandState.pageState()) {
     on<WetlandEvent>((event, emit) => _handleEvent(event, emit));

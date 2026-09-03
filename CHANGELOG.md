@@ -1,7 +1,14 @@
+## 0.1.0
+
+- **New:** `WetlandNavigator.push` now distinguishes the call origin: tapping a list item in the primary body replaces the current tab's secondary detail stack, while tapping inside a detail page drills down (stacks) on top of it.
+- **New:** When rotating from landscape to portrait, the current tab's secondary detail stack is migrated to the portrait root stack, so the detail page stays on top and can be popped back to the tab page.
+- **Fix:** In portrait mode, tapping a list item no longer pushes a duplicate list page; it now opens the detail page full-screen (root-level `DetailRoute`).
+- **Docs:** Added dartdoc comments to the public API.
+
 ## 0.0.1
 
-- 首个发布版本。
-- 基于 `custom_adaptive_scaffold` 与 `auto_route` 的自适应导航框架。
-- 支持横屏三栏布局：左侧主 tab 导航、中间主内容、右侧详情面板。
-- 每个主 tab 维护独立的右侧详情导航栈，切换 tab 时详情保留不丢（微信电脑版 / pad 行为）。
-- 提供 `Wetland` 组件、`TabDestination` 配置、`context.wetland.push/pop` 导航扩展。
+- Initial release.
+- Adaptive navigation framework built on `custom_adaptive_scaffold` and `auto_route`.
+- Landscape three-column layout: primary tab navigation on the left, main content in the middle, detail panel on the right.
+- Each primary tab keeps its own independent right-hand detail navigation stack; switching tabs preserves the detail stack (WeChat desktop / iPad behavior).
+- Provides the `Wetland` widget, `TabDestination` configuration, and the `context.wetland.push/pop` navigation extension.

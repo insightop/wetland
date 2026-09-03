@@ -1,13 +1,23 @@
 import "package:flutter/material.dart" hide NavigationDestination;
-import "package:custom_adaptive_scaffold/custom_adaptive_scaffold.dart";
+import "package:custom_adaptive_scaffold/custom_adaptive_scaffold.dart"
+    hide NavigationRailTheme, NavigationRailThemeData;
 import "package:flutter_bloc/flutter_bloc.dart";
 import "../blocs/wetland_bloc.dart";
 import "../utils/destination.dart";
 
+/// 横屏（dual 模式）下的左侧主导航栏。
+///
+/// 根据 [destinations] 渲染导航项，点击时通过 [WetlandBloc] 切换当前主 tab。
 class PrimaryNavigation extends StatelessWidget {
+  /// 主导航的 tab 配置列表。
   final List<TabDestination> destinations;
+
+  /// 导航栏顶部自定义组件。
   final Widget? leading;
+
+  /// 导航栏底部自定义组件。
   final Widget? trailing;
+
   const PrimaryNavigation(
     this.destinations, {
     this.leading,
@@ -17,7 +27,7 @@ class PrimaryNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 导航栏主题
+    // 导航栏主题（Material 3：通过 NavigationRailTheme 配置选中/未选中样式）
     final selectedIconTheme = Theme.of(context).iconTheme.copyWith(
       color: Theme.of(context).colorScheme.primary, // 使用主题中的主要颜色
     );
@@ -43,34 +53,38 @@ class PrimaryNavigation extends StatelessWidget {
               right: BorderSide(color: Colors.grey.shade300, width: 0.1),
             ),
           ),
-          child: AdaptiveScaffold.standardNavigationRail(
-            // backgroundColor:
-            //     Theme.of(context).colorScheme.surface.withAlpha(250),
-            leading: leading,
-            trailing: trailing,
-            padding: EdgeInsets.zero,
-            width: 74, //74
-            labelType: NavigationRailLabelType.all, // 标题显示方式
-            selectedIconTheme: selectedIconTheme,
-            unselectedIconTheme: unselectedIconTheme,
-            selectedLabelTextStyle: selectedLabelTextStyle,
-            unSelectedLabelTextStyle: unSelectedLabelTextStyle,
-            destinations: destinations
-                .map(
-                  (e) => NavigationDestination(
-                    label: e.label,
-                    icon: e.icon,
-                    selectedIcon: e.selectedIcon,
-                  ),
-                )
-                .toList(),
-            selectedIndex: state.index < destinations.length
-                ? state.index
-                : destinations.isEmpty
-                    ? null
-                    : destinations.length - 1,
-            onDestinationSelected: (e) =>
-                context.read<WetlandBloc>().add(WetlandEvent.setIndex(e)),
+          child: NavigationRailTheme(
+            data: NavigationRailThemeData(
+              selectedIconTheme: selectedIconTheme,
+              unselectedIconTheme: unselectedIconTheme,
+              selectedLabelTextStyle: selectedLabelTextStyle,
+              unselectedLabelTextStyle: unSelectedLabelTextStyle,
+            ),
+            child: AdaptiveScaffold.standardNavigationRail(
+              // backgroundColor:
+              //     Theme.of(context).colorScheme.surface.withAlpha(250),
+              leading: leading,
+              trailing: trailing,
+              padding: EdgeInsets.zero,
+              width: 74, //74
+              labelType: NavigationRailLabelType.all, // 标题显示方式
+              destinations: destinations
+                  .map(
+                    (e) => NavigationDestination(
+                      label: e.label,
+                      icon: e.icon,
+                      selectedIcon: e.selectedIcon,
+                    ),
+                  )
+                  .toList(),
+              selectedIndex: state.index < destinations.length
+                  ? state.index
+                  : destinations.isEmpty
+                      ? null
+                      : destinations.length - 1,
+              onDestinationSelected: (e) =>
+                  context.read<WetlandBloc>().add(WetlandEvent.setIndex(e)),
+            ),
           ),
         );
       },
