@@ -1,0 +1,9 @@
+# 内部文档与开发配置，不随包发布
+docs/
+openspec/
+.agents/
+.codegraph/
+.github/
+.vscode/
+build/
+devtools_options.yaml
