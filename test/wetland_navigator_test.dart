@@ -121,6 +121,11 @@ class _DetailPage extends StatelessWidget {
             const Text('Detail Page'),
             const SizedBox(height: 16),
             ElevatedButton(
+              onPressed: () => context.wetland.push(const _DetailRoute()),
+              child: const Text('drill-down'),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton(
               onPressed: () => context.wetland.pop(),
               child: const Text('pop-detail'),
             ),
@@ -214,5 +219,43 @@ void main() {
     // 仅剩 1 个 destination，不会崩溃；body 显示 tab A 内容
     expect(find.text('A push'), findsOneWidget);
     expect(find.text('B push'), findsNothing);
+  });
+
+  testWidgets('primary body push replaces secondary stack, secondary push drills down',
+      (tester) async {
+    tester.view.physicalSize = const Size(1200, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      MaterialApp.router(routerConfig: _TestRouter().config()),
+    );
+    await tester.pumpAndSettle();
+
+    // 从 primary body 点 A push → 进入详情（replace，栈 [Detail]）
+    await tester.tap(find.text('A push'));
+    await tester.pumpAndSettle();
+    expect(find.text('Detail Page'), findsOneWidget);
+
+    // 再次从 primary body 点 A push → 应替换（栈仍 [Detail]，不叠加）
+    await tester.tap(find.text('A push'));
+    await tester.pumpAndSettle();
+    expect(find.text('Detail Page'), findsOneWidget);
+
+    // 从详情页内点 drill-down → 应叠加（栈 [Detail, Detail]）
+    await tester.tap(find.text('drill-down'));
+    await tester.pumpAndSettle();
+    expect(find.text('Detail Page'), findsOneWidget);
+
+    // pop 一次 → 回到第一个 Detail（证明叠加了两层）
+    await tester.tap(find.text('pop-detail'));
+    await tester.pumpAndSettle();
+    expect(find.text('Detail Page'), findsOneWidget);
+
+    // 再 pop 一次 → 回到 primary body（栈清空）
+    await tester.tap(find.text('pop-detail'));
+    await tester.pumpAndSettle();
+    expect(find.text('Detail Page'), findsNothing);
+    expect(find.text('A push'), findsOneWidget);
   });
 }

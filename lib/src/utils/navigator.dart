@@ -34,12 +34,25 @@ class WetlandNavigator {
     final key = (index < scope.secondaryKeys.length)
         ? scope.secondaryKeys[index]
         : null;
-    if (key != null && key.currentState != null) {
-      Log.d('Push [${route.routeName}] to [SecondaryBody#$index]');
-      return await AutoRouter.of(key.currentState!.context).push<T>(route);
-    } else {
+    if (key == null || key.currentState == null) {
+      // 竖屏（secondary 未挂载）或 key 无效：推入 primary。
       Log.d('Push [${route.routeName}] to [PrimaryBody]');
       return await AutoRouter.of(context).push<T>(route);
+    }
+    final secondaryRouter = AutoRouter.of(key.currentState!.context);
+    // 判断来源：若调用 push 的 context 就在当前 tab 的 secondary navigator 内，
+    // 说明是详情页内下钻，应叠加 push；否则（来自 primary body 主列表）应清空
+    // 当前 tab 的 secondary 栈并替换为最新详情。
+    final nearestNavigator = context.findAncestorStateOfType<NavigatorState>();
+    final fromSecondary = nearestNavigator != null &&
+        scope.secondaryKeys.any((k) => k.currentState == nearestNavigator);
+    if (fromSecondary) {
+      Log.d('Push [${route.routeName}] to [SecondaryBody#$index] (drill-down)');
+      return await secondaryRouter.push<T>(route);
+    } else {
+      Log.d('Push [${route.routeName}] to [SecondaryBody#$index] (replace)');
+      await secondaryRouter.replaceAll([route]);
+      return null;
     }
   }
 
