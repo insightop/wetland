@@ -1,0 +1,11 @@
+# dsh-permission-rules — wetland 项目规则
+#
+# 放行 Flutter/Dart/Melos 工具链命令，避免每次沙盒外操作都触发审批。
+# 危险操作由 home 级全局规则 + 内置高危基线统一拦截，这里不重复。
+rules:
+  - match:
+      tools: [bash, pwsh]
+      argv: { command: [flutter, dart, melos] }
+    action: allow
+    reason: "Trusted Flutter/Dart/Melos toolchain commands run without approval"
+    tags: [flutter, toolchain]
