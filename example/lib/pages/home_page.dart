@@ -48,6 +48,22 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Wetland(
       destinations: destinations,
+      secondaryPlaceholder: (context) => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.touch_app_outlined, size: 48),
+              SizedBox(height: 12),
+              Text(
+                'Select an item to see details',
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
