@@ -65,11 +65,61 @@ class _SecondaryBodyState extends State<SecondaryBody> {
     widget.onRouterReady?.call(widget.index ?? -1, router);
   }
 
+  /// 判断该 router 是否「只剩外壳页」——即详情栈里没有任何用户详情。
+  ///
+  /// wetland 约定：secondary 的子路由集合首项是一条 `path: ''` 的外壳路由，
+  /// 它的唯一职责是让 nested [Navigator] 存在（见 `lib/src/utils/navigator.dart`
+  /// 的 replace 逻辑：push 时保留栈底外壳页、只替换其上的详情层）。
+  ///
+  /// 因此判定条件为「栈中恰好只有一条空路径的外壳页」：
+  /// - 栈长 > 1 —— 外壳页之上还有详情，不是空态；
+  /// - 栈长 == 1 但该页路径非空 —— 调用方没配外壳页，而把某个真实页面作为
+  ///   初始子路由，此时应正常显示该页面，不能被默认画面覆盖；
+  /// - 栈为空 —— 调用方完全没配外壳页，交给 auto_route 自身的 `placeholder`
+  ///   处理（见 [AutoRouteNavigator]），避免同一占位被渲染两次。
+  bool _isShellOnly(StackRouter router) {
+    final stack = router.stack;
+    if (stack.length != 1) return false;
+    return stack.first.routeData.route.hasEmptyPath;
+  }
+
+  /// [AutoRouter.builder] 回调：在 Navigator 之上叠加用户定制的默认画面。
+  ///
+  /// [AutoRouter] 把 `builder` 包在 [StackRouterScope] 之内
+  /// （auto_route `auto_router.dart:184-191`），因此这里的 [context] 可解析到
+  /// 当前 secondary 自己的 [StackRouter]，而不是上一级的 AppRouter。
+  ///
+  /// 为什么用叠加而不是替换：若在空态时直接返回 [placeholder] 而丢掉
+  /// `navigator`，nested [Navigator] 会被移出 widget 树，
+  /// `widget.navigatorKey.currentState` 随之变为 null，导致
+  /// `context.wetland.push` 走「secondary 未挂载」分支、把详情误推进 primary
+  /// （横屏下详情变成全屏覆盖，右侧双栏失效）。因此必须让 Navigator 常驻树上。
+  ///
+  /// 覆盖层用 [ColoredBox]（命中行为 opaque）承载，既能遮住外壳页，也能吸收
+  /// 点击，避免用户误触到被遮住的外壳页。
+  Widget _buildWithPlaceholder(BuildContext context, Widget navigator) {
+    final router = AutoRouter.of(context);
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        navigator,
+        // 保持 children 形状稳定（空态只是多一个覆盖层），
+        // 避免 Navigator 在「空态 ↔ 有详情」之间切换时被重新挂载。
+        if (_isShellOnly(router))
+          ColoredBox(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            child: widget.placeholder!(context),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AutoRouter(
       navigatorKey: widget.navigatorKey,
       placeholder: widget.placeholder,
+      builder: widget.placeholder == null ? null : _buildWithPlaceholder,
     );
   }
 }
