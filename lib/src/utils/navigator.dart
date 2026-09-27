@@ -55,7 +55,13 @@ class WetlandNavigator {
       return await secondaryRouter.push<T>(route);
     } else {
       Log.d('Push [${route.routeName}] to [SecondaryBody#$index] (replace)');
-      await secondaryRouter.replaceAll([route]);
+      // 保留栈底的外壳页（nested router 的初始页），只替换其上的详情层，
+      // 这样 pop 详情后能回到外壳页，而不会落到空栈。
+      final stack = secondaryRouter.stack;
+      final shell = stack.isNotEmpty
+          ? [stack.first.routeData.route.toPageRouteInfo()]
+          : <PageRouteInfo>[];
+      await secondaryRouter.replaceAll([...shell, route]);
       return null;
     }
   }
