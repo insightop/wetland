@@ -15,11 +15,15 @@ class SecondaryBody extends StatefulWidget {
   /// 该 secondary 在 destinations 中的下标。
   final int? index;
 
+  /// 详情栈为空时显示的占位页（如引导文案）。
+  final WidgetBuilder? placeholder;
+
   const SecondaryBody({
     super.key,
     required this.navigatorKey,
     this.onRouterReady,
     this.index,
+    this.placeholder,
   });
 
   @override
@@ -65,6 +69,7 @@ class _SecondaryBodyState extends State<SecondaryBody> {
   Widget build(BuildContext context) {
     return AutoRouter(
       navigatorKey: widget.navigatorKey,
+      placeholder: widget.placeholder,
     );
   }
 }

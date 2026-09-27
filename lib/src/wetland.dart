@@ -47,6 +47,12 @@ class Wetland extends StatefulWidget {
   /// 是否使用抽屉式导航（预留）。
   final bool useDrawer;
 
+  /// 右侧详情区在详情栈为空时显示的占位（如引导文案）。
+  ///
+  /// 仅在横屏（dual 模式）的 secondaryBody 生效；竖屏（single 模式）
+  /// 没有独立详情区，不显示该占位。
+  final WidgetBuilder? secondaryPlaceholder;
+
   Wetland({
     super.key,
     this.destinations,
@@ -54,6 +60,7 @@ class Wetland extends StatefulWidget {
     this.useDrawer = false,
     this.primaryNavigationRailLeading,
     this.primaryNavigationRailTrailing,
+    this.secondaryPlaceholder,
     // this.placeholder = const DefaultPlaceholderPage(),
     this.transitionDuration = const Duration(milliseconds: 1000),
   }) : assert(
@@ -229,6 +236,7 @@ class _WetlandState extends State<Wetland> {
                                     navigatorKey: _secondaryKeys[i],
                                     index: i,
                                     onRouterReady: _onSecondaryRouterReady,
+                                    placeholder: widget.secondaryPlaceholder,
                                   ),
                               ],
                             ),
