@@ -163,6 +163,20 @@ class _WetlandState extends State<Wetland> {
               _migrateSecondaryToPrimary(context, tabIndex, router);
             });
           }
+          // 从 single 切到 dual（竖转横）：把根栈上的详情回填到当前 tab 的
+          // secondary，使变宽后立即呈现左右双栏。
+          if (_previousMode == WetlandMode.single &&
+              state.mode == WetlandMode.dual) {
+            final tabIndex =
+                _safeIndex(state.index, widget.destinations?.length ?? 0);
+            // 与迁移相反：此刻 secondary 正在挂载，其 router 引用还没写入
+            // [_secondaryRouters]，需等就绪后再回填，故把首帧查询也放进
+            // post-frame 回调（见 [_backfillPrimaryToSecondary]）。
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              _backfillPrimaryToSecondary(context, tabIndex, attempt: 0);
+            });
+          }
           _previousMode = state.mode;
         },
         child: BlocBuilder<WetlandBloc, WetlandState>(
@@ -336,6 +350,84 @@ class _WetlandState extends State<Wetland> {
         ' ${detailRoutes.map((r) => r.routeName).toList()}');
     final rootRouter = AutoRouter.of(context).root;
     _pushToRootWhenTopMost(rootRouter, detailRoutes, attempt: 0);
+  }
+
+  /// 把竖屏根栈上的详情回填到 [tabIndex] 对应的 secondary 栈，使窄→宽切换后
+  /// 立即呈现左右双栏，无需用户先返回上一页。
+  ///
+  /// 与 [_migrateSecondaryToPrimary] 互为逆操作，取根的规则对称：
+  /// - 跳过根栈首项（app 的首页/tab 外壳，如 `HomeRoute`）—— 它是承载 `Wetland`
+  ///   的容器页，不是用户选中的详情；
+  /// - 跳过 `autoFilled` 的页（auto_route 自动补齐的父级壳）；
+  /// - 其余按原顺序回填，保留竖屏期间的下钻层级。
+  ///
+  /// 时序：本方法在模式切到 dual 后的 post-frame 触发。此刻 secondary 的
+  /// [NestedStackRouter] 往往尚未就绪：initial 路由由 auto_route 在
+  /// `didChangeDependencies` 的 post-frame 里 setup，Navigator 随后才存在，
+  /// 其引用也要等 [SecondaryBody] 上报后才会写入 [_secondaryRouters]。
+  /// 因此与 [_pushToRootWhenTopMost] 一样按帧重试，直到该 tab 的 router：
+  /// 1. 仍是 [NestedStackRouter]，且挂在根 router 的 `childControllers` 下
+  ///    （排除上一轮 dual 周期遗留、已卸载的旧引用）；
+  /// 2. 其 `Navigator` 已挂载（等价于外壳页已入栈）。
+  ///
+  /// 必须等外壳页就位再 push：否则详情先入栈，随后 `setupInitialRoutes` 会把
+  /// 外壳页压到详情之上，详情反被盖住。
+  ///
+  /// 回填后再把详情从根栈移除，使根栈只剩 tab 页。顺序是先 push 后移除，
+  /// 避免中间帧两侧都没有详情而闪回列表页。
+  void _backfillPrimaryToSecondary(
+    BuildContext context,
+    int tabIndex, {
+    required int attempt,
+  }) {
+    // 300 帧 ≈ 5s@60fps，与迁移重试上限一致，足以覆盖 1000ms 过渡期。
+    if (attempt > 300) {
+      Log.w(
+        'Abandon backfilling portrait root details to secondary'
+        ' (tab #$tabIndex): secondary router not ready after $attempt frames',
+      );
+      return;
+    }
+    // 无 destinations（[Wetland.primaryBody] 模式）时根本没有 secondary，
+    // 直接返回，避免无意义地空转重试。这是结构性判断，与"router 尚未写入
+    // 引用"的时序问题不同，后者需要重试。
+    if (_secondaryRouters.isEmpty) return;
+    final rootRouter = AutoRouter.of(context).root;
+    final rootStack = rootRouter.stack;
+    if (rootStack.length <= 1) return; // 只有首页/tab 外壳 = 无详情
+    final detailRoutes = <PageRouteInfo>[];
+    final detailEntries = <RouteData>[];
+    for (var i = 1; i < rootStack.length; i++) {
+      final entry = rootStack[i];
+      final rt = entry.routeData.route;
+      if (rt.autoFilled) continue; // 跳过 Home 等自动补齐的父级壳
+      detailRoutes.add(rt.toPageRouteInfo());
+      detailEntries.add(entry.routeData);
+    }
+    if (detailRoutes.isEmpty) return;
+
+    final router = (tabIndex < _secondaryRouters.length)
+        ? _secondaryRouters[tabIndex]
+        : null;
+    if (router is! NestedStackRouter ||
+        router.navigatorKey.currentState == null ||
+        !rootRouter.childControllers.contains(router)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _backfillPrimaryToSecondary(context, tabIndex, attempt: attempt + 1);
+      });
+      return;
+    }
+
+    Log.d('Backfill ${detailRoutes.length} detail route(s) from portrait root'
+        ' to secondary (tab #$tabIndex):'
+        ' ${detailRoutes.map((r) => r.routeName).toList()}');
+    // 先 push 再移除：两者都在同一帧内同步生效，任一帧都不会出现"两侧都没有
+    // 详情"的空白中间态。
+    router.pushAll(detailRoutes);
+    for (final entry in detailEntries.reversed) {
+      rootRouter.removeRoute(entry);
+    }
   }
 
   /// 等根 router 成为 top-most 后再把 [routes] push 到根栈。
