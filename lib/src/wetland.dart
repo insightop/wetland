@@ -20,6 +20,25 @@ bool logicalXor(bool a, bool b) {
   return (a || b) && !(a && b);
 }
 
+/// 布局切换过渡期间保持子树原位可见（位置不随动画改变）。
+///
+/// 用作 [SlotLayoutConfig] 的 `inAnimation` 与 `outAnimation`，**两者必须是同一
+/// 函数**，这样 [AnimatedSwitcher] 在切换时不会改变 transition 的 widget 树形状，
+/// 出场的旧子树得以原样复用、Element 不被重建。
+///
+/// 若两侧形状不一致（例如只给 `outAnimation` 包一层），出场时多出的 widget 层会
+/// 使 `SecondaryBody` 及其内部 `AutoRouter` 被销毁重建：详情丢失、只剩 primary
+/// 全屏，直到过渡动画结束才由迁移补回详情 —— 即"primary 先抢占地"的中间态。
+Widget _keepOnScreen(Widget child, Animation<double> animation) {
+  return SlideTransition(
+    position: Tween<Offset>(
+      begin: Offset.zero,
+      end: Offset.zero,
+    ).animate(animation),
+    child: child,
+  );
+}
+
 /// 自适应导航根组件。
 ///
 /// 根据屏幕尺寸自动切换布局：
@@ -240,15 +259,21 @@ class _WetlandState extends State<Wetland> {
                                   ),
                               ],
                             ),
+                            //! inAnimation 与 outAnimation 必须使用**同一个**函数，
+                            //! 否则 AnimatedSwitcher 切换时会改变 transition 的
+                            //! widget 树形状：之前只设 outAnimation，dual→single
+                            //! 出场时旧子树会从 `config` 被重新包成
+                            //! `SlideTransition(config)`，多出的一层导致 Element
+                            //! 不匹配，整棵 IndexedStack→SecondaryBody→AutoRouter
+                            //! 被销毁并重建为空栈，详情消失、只剩 primary 全屏；
+                            //! 且重建出的空 secondary router 会继续挂在根 router 上
+                            //! 直到出场动画（transitionDuration，默认 1000ms）结束，
+                            //! 阻塞迁移 —— 这就是用户看到的"primary 先抢占地，之后
+                            //! secondary 才 push 进来"。两层形状一致后，出场子树被
+                            //! 原样复用，详情在整个过渡期保持可见。
+                            inAnimation: _keepOnScreen,
                             // outAnimation: (child, animation) => AdaptiveScaffold.rightOutIn(child, animation),
-                            outAnimation: (child, animation) =>
-                                SlideTransition(
-                              position: Tween<Offset>(
-                                begin: Offset(0.0, 0.0),
-                                end: Offset(0.0, 0.0),
-                              ).animate(animation),
-                              child: child,
-                            ),
+                            outAnimation: _keepOnScreen,
                             outCurve: Curves.easeInOutCubic,
                           ),
                         },
