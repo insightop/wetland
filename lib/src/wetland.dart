@@ -284,16 +284,24 @@ class _WetlandState extends State<Wetland> {
 
   /// 把当前 tab 的 secondary 详情栈迁移到根 router 顶部，使竖屏根栈顶部为当前详情页。
   ///
-  /// 详情序列来自 [tabIndex] 对应的 per-tab [NestedStackRouter] 栈里
-  /// **非 autoFilled** 的真实详情页（已过滤 Home 这类由 auto_route 自动补齐的父级壳），
-  /// 并直接以它们自身的 [PageRouteInfo] push 到根 router —— 根 collection 里已存在
-  /// 同名的根级详情 route（如 DetailRoute），因此不会 buildPathTo 重复补齐 Home。
+  /// 详情序列只取 [tabIndex] 对应的 per-tab [NestedStackRouter] 栈里**真实详情页**：
+  /// - 跳过栈底的外壳页（index 0，nested router 的初始 `PlaceholderRoute`，
+  ///   它只负责让 secondary 的 `Navigator` 存在，不是用户选中的详情）；
+  /// - 跳过 `autoFilled` 的页（Home 这类由 auto_route 自动补齐的父级壳）。
+  ///
+  /// 仅当过滤后仍有详情时才迁移，因此空态（栈里只有外壳页）不会误把
+  /// primary 再压一层。这些详情直接以自身的 [PageRouteInfo] push 到根 router ——
+  /// 根 collection 里已存在同名的根级详情 route（如 DetailRoute），因此不会
+  /// buildPathTo 重复补齐 Home。
   void _migrateSecondaryToPrimary(BuildContext context, int tabIndex,
       StackRouter? router) {
     if (router == null) return;
+    final stack = router.stack;
+    if (stack.length <= 1) return; // 只有外壳页 = 无详情，无需迁移
     final detailRoutes = <PageRouteInfo>[];
-    for (final page in router.stack) {
-      final rt = page.routeData.route;
+    for (var i = 0; i < stack.length; i++) {
+      if (i == 0) continue; // 跳过栈底外壳页（Navigator 载体）
+      final rt = stack[i].routeData.route;
       if (rt.autoFilled) continue; // 跳过 Home 等自动补齐的父级壳
       detailRoutes.add(rt.toPageRouteInfo());
     }
