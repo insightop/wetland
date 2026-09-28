@@ -42,6 +42,37 @@ Widget _keepOnScreen(Widget child, Animation<double> animation) {
   );
 }
 
+/// 宽度收缩出场动画（用于导航栏，见 `outAnimation`）。
+///
+/// `AdaptiveLayout.updateSize` 只在动画**结束**时刷新槽位尺寸基准，因此 body 左
+/// 偏移的补间是 `Tween(旧宽, 新宽)`。若出场动画不改布局宽度（Slide/Fade 都只改
+/// 绘制），子尺寸全程不变、补间退化成常量，body 左偏移会卡住到动画结束才突跳。
+Widget _collapseWidth(Widget child, Animation<double> animation) {
+  return ClipRect(
+    child: Align(
+      alignment: AlignmentDirectional.centerStart,
+      widthFactor: 1.0 - animation.value,
+      child: child,
+    ),
+  );
+}
+
+/// 高度收缩出场动画（用于底部导航）。
+///
+/// 与 [_collapseWidth] 同理：底导向下滑出时若槽位高度不变，框架的
+/// `bottomMargin` 补间退化为常量，body 高度不会平滑收回。
+/// 用高度收缩让槽位逐帧变矮，同时导航栏被裁掉上半部分 —— 视觉上等价于
+/// 「向下滑出」，但**槽位区域始终有内容绘制**，不会露出纯黑。
+Widget _collapseHeight(Widget child, Animation<double> animation) {
+  return ClipRect(
+    child: Align(
+      alignment: AlignmentDirectional.bottomCenter,
+      heightFactor: 1.0 - animation.value,
+      child: child,
+    ),
+  );
+}
+
 /// 自适应导航根组件。
 ///
 /// 根据屏幕尺寸自动切换布局：
@@ -210,8 +241,7 @@ class _WetlandState extends State<Wetland> {
                               inAnimation: (child, animation) =>
                                   AdaptiveScaffold.leftOutIn(child, animation),
                               inCurve: Curves.easeInOutCubic,
-                              outAnimation: (child, animation) =>
-                                  AdaptiveScaffold.leftInOut(child, animation),
+                              outAnimation: _collapseWidth,
                               outCurve: Curves.easeInOutCubic,
                           ),
                         },
@@ -234,11 +264,15 @@ class _WetlandState extends State<Wetland> {
                               _setMode(context, WetlandMode.single);
                               return BottomNavigation(widget.destinations!);
                             },
+                            //! 进场只淡入：槽位的**位置**已由框架的
+                            //! `bottomMargin` 补间平滑驱动（实测槽位 top 从 844
+                            //! 平滑移到 793.6），再叠加滑动会重复位移。
                             inAnimation: (child, animation) =>
                                 AdaptiveScaffold.fadeIn(child, animation),
                             inCurve: Curves.easeInOutCubic,
-                            outAnimation: (child, animation) =>
-                                AdaptiveScaffold.fadeOut(child, animation),
+                            //! 出场用高度收缩：既产生「向下收起」的位移观感，
+                            //! 又保证槽位区域始终有内容绘制、不露纯黑。
+                            outAnimation: _collapseHeight,
                             outCurve: Curves.easeInOutCubic,
                           ),
                           Breakpoints.medium: SlotLayout.from(
@@ -247,11 +281,15 @@ class _WetlandState extends State<Wetland> {
                               _setMode(context, WetlandMode.single);
                               return BottomNavigation(widget.destinations!);
                             },
+                            //! 进场只淡入：槽位的**位置**已由框架的
+                            //! `bottomMargin` 补间平滑驱动（实测槽位 top 从 844
+                            //! 平滑移到 793.6），再叠加滑动会重复位移。
                             inAnimation: (child, animation) =>
                                 AdaptiveScaffold.fadeIn(child, animation),
                             inCurve: Curves.easeInOutCubic,
-                            outAnimation: (child, animation) =>
-                                AdaptiveScaffold.fadeOut(child, animation),
+                            //! 出场用高度收缩：既产生「向下收起」的位移观感，
+                            //! 又保证槽位区域始终有内容绘制、不露纯黑。
+                            outAnimation: _collapseHeight,
                             outCurve: Curves.easeInOutCubic,
                           ),
                         },
