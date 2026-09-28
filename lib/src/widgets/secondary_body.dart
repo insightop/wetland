@@ -43,18 +43,38 @@ class _SecondaryBodyState extends State<SecondaryBody> {
   ///
   /// [AutoRouter.navigatorObservers] 的文档明确要求：一个 [NavigatorObserver]
   /// 实例只能被单个 Navigator 使用，复用到多个 Navigator 会触发断言。
-  /// 本方法也顺带在每次重建后重新触发一次回调（栈可能已变化）。
   List<NavigatorObserver> _observers() => [
-        _StackChangedObserver(onChanged: _onChanged),
+        _StackChangedObserver(
+          onChanged: _onStackChanged,
+          onPop: _onStackPopped,
+        ),
       ];
 
-  void _onChanged() {
-    // didPush/didPop 可能在 build 期间触发，直接回调会让上层 setState 撞上
-    // "setState() called during build"，故统一延到本帧结束后再通知。
+  /// 栈变化（push/replace/remove）后通知上层重算布局。
+  ///
+  /// 延到本帧结束：这些事件可能在 build 期间触发，直接回调会让上层 `setState`
+  /// 撞上 "setState() called during build"。
+  void _onStackChanged() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       widget.onStackChanged?.call();
     });
+  }
+
+  /// 详情被 pop 时**立即**重建自身，让空态覆盖层与 Navigator 同帧生效。
+  ///
+  /// 这是问题1的修复点。`NavigatorObserver.didPop` 由
+  /// `Navigator._flushObserverNotifications()` 在**布局/绘制之前**调用
+  /// （见 navigator.dart，它位于 `_flushHistoryUpdates` 的末尾），因此此处
+  /// `setState` 是安全的（不在 build 期间），且当帧就会重建。
+  ///
+  /// 若沿用 [_onStackChanged] 的 post-frame 延迟，覆盖层会晚一帧才出现：
+  /// 该帧 Navigator 已移除详情页、router 栈已回到纯外壳，但覆盖层仍在旧状态
+  /// （不渲染），于是露出外壳页的 logo —— 即用户看到的
+  /// 「右侧空着却显示了 logo 页」。
+  void _onStackPopped() {
+    if (mounted) setState(() {});
+    _onStackChanged();
   }
 
   @override
@@ -157,9 +177,13 @@ class _SecondaryBodyState extends State<SecondaryBody> {
 /// ChangeNotifier 更可靠：auto_route 在 `onPopPage` 路径上不会 `notifyAll`，
 /// 仅靠监听 router 会漏掉 pop。
 class _StackChangedObserver extends NavigatorObserver {
-  _StackChangedObserver({required this.onChanged});
+  _StackChangedObserver({required this.onChanged, required this.onPop});
 
+  /// 栈发生任意变化时调用。
   final VoidCallback onChanged;
+
+  /// 仅当详情被 pop 时调用（用于同帧刷新空态覆盖层）。
+  final VoidCallback onPop;
 
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) =>
@@ -167,7 +191,7 @@ class _StackChangedObserver extends NavigatorObserver {
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
-      onChanged();
+      onPop();
 
   @override
   void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) =>

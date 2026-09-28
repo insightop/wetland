@@ -191,12 +191,21 @@ class _WetlandState extends State<Wetland> {
                                   trailing: widget.primaryNavigationRailTrailing,
                                 );
                               },
+                              //! 导航栏必须「原地出现」，不能用框架默认的
+                              //! [AdaptiveScaffold.leftOutIn]（SlideTransition
+                              //! 从屏幕左外侧滑入）。
+                              //!
+                              //! 原因：`AdaptiveLayout` 的 delegate 会把 body 的
+                              //! 左偏移**立即**加上导航栏宽度（`leftMargin` 走
+                              //! 自己的 controller，不留插值窗口），而滑入动画
+                              //! 要耗完 transitionDuration。两者不同步，于是
+                              //! 过渡期间那一条「已让给导航栏、但导航栏还没滑到」
+                              //! 的宽度在视觉上是空的，看起来像一条随动画被逐渐
+                              //! 填充的竖条（实测起始空隙 74.1px，约 1s 后才消失）。
+                              //! 原地出现后，该宽度一出现就被导航栏填满。
                               inAnimation: (child, animation) =>
-                                  AdaptiveScaffold.leftOutIn(child, animation),
-                            inCurve: Curves.linear,
-                            // outAnimation: (child, animation) =>
-                            // AdaptiveScaffold.leftInOut(child, animation),
-                            // outCurve: Curves.linear,
+                                  AdaptiveScaffold.stayOnScreen(
+                                      child, animation),
                           ),
                         },
                       )
