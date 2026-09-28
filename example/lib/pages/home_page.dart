@@ -46,24 +46,10 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // 右侧空态由 secondary 自己的外壳页承担（见 router.dart 里 `path: ''` 的
+    // PlaceholderRoute，渲染 logo），这里无需再传 secondaryPlaceholder。
     return Wetland(
       destinations: destinations,
-      secondaryPlaceholder: (context) => const Center(
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.touch_app_outlined, size: 48),
-              SizedBox(height: 12),
-              Text(
-                'Select an item to see details',
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

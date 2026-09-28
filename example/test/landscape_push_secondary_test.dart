@@ -12,8 +12,8 @@ void main() {
     await tester.pumpWidget(WetlandExampleApp());
     await tester.pumpAndSettle();
 
-    // 前置条件：空态时右侧显示默认画面（placeholder）
-    expect(find.text('Select an item to see details'), findsOneWidget);
+    // 前置条件：空态时右侧显示外壳页（example 的 logo 占位页）
+    expect(find.byType(Image), findsOneWidget);
 
     // 从中间列表点开详情
     await tester.tap(find.text('Messages 0'), warnIfMissed: false);
@@ -21,8 +21,8 @@ void main() {
 
     // 详情出现在右侧 secondary
     expect(find.text('Messages Detail '), findsOneWidget);
-    // 且默认画面被替换掉
-    expect(find.text('Select an item to see details'), findsNothing);
+    // 且外壳页被详情盖住
+    expect(find.byType(Image), findsNothing);
     // 关键：中间列表页与左侧主导航仍可见 —— 说明详情进的是右侧 secondary，
     // 而不是被误推进 primary 造成全屏覆盖（那会遮住列表与 tab 导航）。
     expect(find.text('Messages 0'), findsOneWidget);

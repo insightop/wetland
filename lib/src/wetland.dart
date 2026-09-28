@@ -69,12 +69,6 @@ class Wetland extends StatefulWidget {
   /// 是否使用抽屉式导航（预留）。
   final bool useDrawer;
 
-  /// 右侧详情区在详情栈为空时显示的占位（如引导文案）。
-  ///
-  /// 仅在横屏（dual 模式）的 secondaryBody 生效；竖屏（single 模式）
-  /// 没有独立详情区，不显示该占位。
-  final WidgetBuilder? secondaryPlaceholder;
-
   Wetland({
     super.key,
     this.destinations,
@@ -82,7 +76,6 @@ class Wetland extends StatefulWidget {
     this.useDrawer = false,
     this.primaryNavigationRailLeading,
     this.primaryNavigationRailTrailing,
-    this.secondaryPlaceholder,
     // this.placeholder = const DefaultPlaceholderPage(),
     this.transitionDuration = const Duration(milliseconds: 1000),
   }) : assert(
@@ -168,12 +161,24 @@ class _WetlandState extends State<Wetland> {
                 tween: Tween<double>(begin: targetRatio, end: targetRatio),
                 duration: widget.transitionDuration,
                 curve: Curves.easeInOutCubic,
-                builder: (context, ratio, child) => AdaptiveLayout(
-                  //! 比例（动画中）
-                  bodyRatio: ratio,
-                  //! 该槽位切换动画由我们自己的 ratio 插值承担，
-                  //! 关闭其内部动画避免两套动画互相干扰。
-                  internalAnimations: false,
+                builder: (context, ratio, child) => ColoredBox(
+                  //! 兜底背景：`AdaptiveLayout` 只绘制各槽位内部的内容，
+                  //! 槽位之间（过渡中导航栏与 body 瞬时错开的那条缝隙）
+                  //! **不绘制任何背景**，露出的区域是纯黑 —— 即用户看到的
+                  //! 「一闪而过的黑色竖条」（实测该区域像素为 (0,0,0)）。
+                  //! 垫一层应用背景色后，缝隙显示为背景色而非黑色。
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  child: AdaptiveLayout(
+                    //! 比例（动画中）
+                    bodyRatio: ratio,
+                    //! 保留框架内置的槽位尺寸过渡（默认 true）。
+                    //!
+                    //! 它让 body / 导航栏的 margin 随 `transitionDuration` 平滑插值
+                    //! （框架内置曲线为 `Curves.easeInOutCubic`），这是「单⇄双栏
+                    //! 切换有过渡动画」的来源。若关掉（`false`），框架会把内部
+                    //! `AnimationController` 的 duration 置 0，margin 直接跳到终值，
+                    //! 表现为切换时生硬跳变、毫无动画。
+                    internalAnimations: true,
                   //! 过渡动画
                   transitionDuration: widget.transitionDuration,
                   //! 主导航
@@ -191,26 +196,35 @@ class _WetlandState extends State<Wetland> {
                                   trailing: widget.primaryNavigationRailTrailing,
                                 );
                               },
-                              //! 导航栏必须「原地出现」，不能用框架默认的
-                              //! [AdaptiveScaffold.leftOutIn]（SlideTransition
-                              //! 从屏幕左外侧滑入）。
-                              //!
-                              //! 原因：`AdaptiveLayout` 的 delegate 会把 body 的
-                              //! 左偏移**立即**加上导航栏宽度（`leftMargin` 走
-                              //! 自己的 controller，不留插值窗口），而滑入动画
-                              //! 要耗完 transitionDuration。两者不同步，于是
-                              //! 过渡期间那一条「已让给导航栏、但导航栏还没滑到」
-                              //! 的宽度在视觉上是空的，看起来像一条随动画被逐渐
-                              //! 填充的竖条（实测起始空隙 74.1px，约 1s 后才消失）。
-                              //! 原地出现后，该宽度一出现就被导航栏填满。
+                              //! 导航栏进/出场都用「从左侧滑入/滑出」，并与
+                              //! body 的让位动画（框架内置 `internalAnimations`）
+                              //! 使用同一时长与曲线，二者因此同步：
+                              //! - 单→双：body 用 1s 从 0 让到 74.1，导航栏同时
+                              //!   从屏幕左外侧滑到 0 —— 两者速度一致，中间不会
+                              //!   出现「已让位但导航栏还没到」的空隙；
+                              //! - 双→单：body 用 1s 从 74.1 收回 0，导航栏同时
+                              //!   向左滑出，始终盖住那条正在收窄的区域。
+                              //! 若只给 inAnimation 而用「原地出现」
+                              //! （`stayOnScreen`），双→单时导航栏会立刻消失，
+                              //! 而 body 还要 1s 才收回，左侧便露出 74px 空隙。
                               inAnimation: (child, animation) =>
-                                  AdaptiveScaffold.stayOnScreen(
-                                      child, animation),
+                                  AdaptiveScaffold.leftOutIn(child, animation),
+                              inCurve: Curves.easeInOutCubic,
+                              outAnimation: (child, animation) =>
+                                  AdaptiveScaffold.leftInOut(child, animation),
+                              outCurve: Curves.easeInOutCubic,
                           ),
                         },
                       )
                     : null,
                 //! 底部导航
+                //
+                // 出场动画（单→双，即底部导航消失、左侧导航栏出现）：
+                // 小屏/中屏的槽位配置只在单栏生效，切到双栏时会落到
+                // `SlotLayoutConfig.empty()`（builder 为 null）。若不给动画，
+                // `AnimatedSwitcher` 不做任何过渡，底部导航瞬间消失。
+                // 用 `topToBottom`（向下滑出）并配同一曲线，与 body / 导航栏的
+                // 尺寸补间同步，使「底部导航退场、左侧导航栏进场」连贯。
                 bottomNavigation: widget.destinations != null
                     ? SlotLayout(
                         config: <Breakpoint, SlotLayoutConfig>{
@@ -219,18 +233,26 @@ class _WetlandState extends State<Wetland> {
                             builder: (_) {
                               _setMode(context, WetlandMode.single);
                               return BottomNavigation(widget.destinations!);
-                              // outAnimation: (child, animation) => AdaptiveScaffold.topToBottom(child, animation),
-                              // outCurve: Curves.easeInOutCubic,
                             },
+                            inAnimation: (child, animation) =>
+                                AdaptiveScaffold.fadeIn(child, animation),
+                            inCurve: Curves.easeInOutCubic,
+                            outAnimation: (child, animation) =>
+                                AdaptiveScaffold.fadeOut(child, animation),
+                            outCurve: Curves.easeInOutCubic,
                           ),
                           Breakpoints.medium: SlotLayout.from(
                             key: const Key('Bottom Navigation'),
                             builder: (_) {
                               _setMode(context, WetlandMode.single);
                               return BottomNavigation(widget.destinations!);
-                              // outAnimation: (child, animation) => AdaptiveScaffold.topToBottom(child, animation),
-                              // outCurve: Curves.easeInOutCubic,
                             },
+                            inAnimation: (child, animation) =>
+                                AdaptiveScaffold.fadeIn(child, animation),
+                            inCurve: Curves.easeInOutCubic,
+                            outAnimation: (child, animation) =>
+                                AdaptiveScaffold.fadeOut(child, animation),
+                            outCurve: Curves.easeInOutCubic,
                           ),
                         },
                       )
@@ -271,7 +293,6 @@ class _WetlandState extends State<Wetland> {
                                       index: i,
                                       onRouterReady: _onSecondaryRouterReady,
                                       onStackChanged: _onSecondaryStackChanged,
-                                      placeholder: widget.secondaryPlaceholder,
                                     ),
                                 ],
                               ),
@@ -289,6 +310,7 @@ class _WetlandState extends State<Wetland> {
                         },
                       )
                     : null,
+                  ),
                 ),
               ),
             );

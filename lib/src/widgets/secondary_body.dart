@@ -5,18 +5,20 @@ import 'package:flutter/material.dart';
 ///
 /// 每个主 tab 一个独立的 [AutoRouter]，各自维护独立的详情栈，
 /// 因此切换主 tab 时详情栈不丢失。
+///
+/// **空态由 secondary 自己的外壳页承担**：约定子路由集合首项是一条
+/// `path: ''` 的外壳路由（example 里是渲染 logo 的 `PlaceholderPage`）。
+/// 它既让嵌套 [Navigator] 存在，也是「右侧还没有详情」时用户看到的画面。
+/// 因此这里**不做任何覆盖**——有详情页时自然盖住外壳页，没有时自然显示它。
 class SecondaryBody extends StatefulWidget {
   /// 该 secondary 导航器的 key。
   final GlobalKey<NavigatorState> navigatorKey;
 
-  /// 挂载后可安全读取 [StackRouter] 时回调（用于 mode 迁移等）。
+  /// 挂载后可安全读取 [StackRouter] 时回调（用于记录 per-tab router）。
   final void Function(int index, StackRouter router)? onRouterReady;
 
   /// 该 secondary 在 destinations 中的下标。
   final int? index;
-
-  /// 详情栈为空时显示的占位页（如引导文案）。
-  final WidgetBuilder? placeholder;
 
   /// 详情栈发生任何变化（push/pop/replace/remove）时回调。
   ///
@@ -30,7 +32,6 @@ class SecondaryBody extends StatefulWidget {
     required this.navigatorKey,
     this.onRouterReady,
     this.index,
-    this.placeholder,
     this.onStackChanged,
   });
 
@@ -44,13 +45,10 @@ class _SecondaryBodyState extends State<SecondaryBody> {
   /// [AutoRouter.navigatorObservers] 的文档明确要求：一个 [NavigatorObserver]
   /// 实例只能被单个 Navigator 使用，复用到多个 Navigator 会触发断言。
   List<NavigatorObserver> _observers() => [
-        _StackChangedObserver(
-          onChanged: _onStackChanged,
-          onPop: _onStackPopped,
-        ),
+        _StackChangedObserver(onChanged: _onStackChanged),
       ];
 
-  /// 栈变化（push/replace/remove）后通知上层重算布局。
+  /// 栈变化后通知上层重算布局（单栏下由谁占满屏幕取决于此）。
   ///
   /// 延到本帧结束：这些事件可能在 build 期间触发，直接回调会让上层 `setState`
   /// 撞上 "setState() called during build"。
@@ -59,22 +57,6 @@ class _SecondaryBodyState extends State<SecondaryBody> {
       if (!mounted) return;
       widget.onStackChanged?.call();
     });
-  }
-
-  /// 详情被 pop 时**立即**重建自身，让空态覆盖层与 Navigator 同帧生效。
-  ///
-  /// 这是问题1的修复点。`NavigatorObserver.didPop` 由
-  /// `Navigator._flushObserverNotifications()` 在**布局/绘制之前**调用
-  /// （见 navigator.dart，它位于 `_flushHistoryUpdates` 的末尾），因此此处
-  /// `setState` 是安全的（不在 build 期间），且当帧就会重建。
-  ///
-  /// 若沿用 [_onStackChanged] 的 post-frame 延迟，覆盖层会晚一帧才出现：
-  /// 该帧 Navigator 已移除详情页、router 栈已回到纯外壳，但覆盖层仍在旧状态
-  /// （不渲染），于是露出外壳页的 logo —— 即用户看到的
-  /// 「右侧空着却显示了 logo 页」。
-  void _onStackPopped() {
-    if (mounted) setState(() {});
-    _onStackChanged();
   }
 
   @override
@@ -111,62 +93,11 @@ class _SecondaryBodyState extends State<SecondaryBody> {
     widget.onRouterReady?.call(widget.index ?? -1, router);
   }
 
-  /// 判断该 router 是否「只剩外壳页」——即详情栈里没有任何用户详情。
-  ///
-  /// wetland 约定：secondary 的子路由集合首项是一条 `path: ''` 的外壳路由，
-  /// 它的唯一职责是让 nested [Navigator] 存在（见 `lib/src/utils/navigator.dart`
-  /// 的 replace 逻辑：push 时保留栈底外壳页、只替换其上的详情层）。
-  ///
-  /// 因此判定条件为「栈中恰好只有一条空路径的外壳页」：
-  /// - 栈长 > 1 —— 外壳页之上还有详情，不是空态；
-  /// - 栈长 == 1 但该页路径非空 —— 调用方没配外壳页，而把某个真实页面作为
-  ///   初始子路由，此时应正常显示该页面，不能被默认画面覆盖；
-  /// - 栈为空 —— 调用方完全没配外壳页，交给 auto_route 自身的 `placeholder`
-  ///   处理（见 [AutoRouteNavigator]），避免同一占位被渲染两次。
-  bool _isShellOnly(StackRouter router) {
-    final stack = router.stack;
-    if (stack.length != 1) return false;
-    return stack.first.routeData.route.hasEmptyPath;
-  }
-
-  /// [AutoRouter.builder] 回调：在 Navigator 之上叠加用户定制的默认画面。
-  ///
-  /// [AutoRouter] 把 `builder` 包在 [StackRouterScope] 之内
-  /// （auto_route `auto_router.dart:184-191`），因此这里的 [context] 可解析到
-  /// 当前 secondary 自己的 [StackRouter]，而不是上一级的 AppRouter。
-  ///
-  /// 为什么用叠加而不是替换：若在空态时直接返回 [placeholder] 而丢掉
-  /// `navigator`，nested [Navigator] 会被移出 widget 树，
-  /// `widget.navigatorKey.currentState` 随之变为 null，导致
-  /// `context.wetland.push` 走「secondary 未挂载」分支、把详情误推进 primary
-  /// （横屏下详情变成全屏覆盖，右侧双栏失效）。因此必须让 Navigator 常驻树上。
-  ///
-  /// 覆盖层用 [ColoredBox]（命中行为 opaque）承载，既能遮住外壳页，也能吸收
-  /// 点击，避免用户误触到被遮住的外壳页。
-  Widget _buildWithPlaceholder(BuildContext context, Widget navigator) {
-    final router = AutoRouter.of(context);
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        navigator,
-        // 保持 children 形状稳定（空态只是多一个覆盖层），
-        // 避免 Navigator 在「空态 ↔ 有详情」之间切换时被重新挂载。
-        if (_isShellOnly(router))
-          ColoredBox(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            child: widget.placeholder!(context),
-          ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return AutoRouter(
       navigatorKey: widget.navigatorKey,
-      placeholder: widget.placeholder,
       navigatorObservers: _observers,
-      builder: widget.placeholder == null ? null : _buildWithPlaceholder,
     );
   }
 }
@@ -177,13 +108,10 @@ class _SecondaryBodyState extends State<SecondaryBody> {
 /// ChangeNotifier 更可靠：auto_route 在 `onPopPage` 路径上不会 `notifyAll`，
 /// 仅靠监听 router 会漏掉 pop。
 class _StackChangedObserver extends NavigatorObserver {
-  _StackChangedObserver({required this.onChanged, required this.onPop});
+  _StackChangedObserver({required this.onChanged});
 
   /// 栈发生任意变化时调用。
   final VoidCallback onChanged;
-
-  /// 仅当详情被 pop 时调用（用于同帧刷新空态覆盖层）。
-  final VoidCallback onPop;
 
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) =>
@@ -191,7 +119,7 @@ class _StackChangedObserver extends NavigatorObserver {
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
-      onPop();
+      onChanged();
 
   @override
   void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) =>

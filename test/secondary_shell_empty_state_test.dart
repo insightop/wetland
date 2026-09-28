@@ -4,6 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:wetland/wetland.dart';
 
 /// 最小 router，提供 auto_route 上下文（与 wetland_navigator_test 同构）。
+///
+/// secondary 的空态由**外壳页自身**承担：约定子路由集合首项是一条
+/// `path: ''` 的路由，它既让嵌套 `Navigator` 存在，也是空态画面。
 class _TestRouter extends RootStackRouter {
   @override
   List<AutoRoute> get routes => [
@@ -17,8 +20,8 @@ class _TestRouter extends RootStackRouter {
             AutoRoute(
               path: '',
               page: PageInfo(
-                'Placeholder',
-                builder: (data) => const SizedBox(),
+                'Shell',
+                builder: (data) => const Center(child: Text('SHELL_EMPTY_STATE')),
               ),
             ),
           ],
@@ -40,14 +43,13 @@ class _HomePage extends StatelessWidget {
             page: const SizedBox(),
           ),
         ],
-        secondaryPlaceholder: (_) => const Center(child: Text('NO_DETAIL')),
       ),
     );
   }
 }
 
 void main() {
-  testWidgets('传 secondaryPlaceholder 时 secondary 空栈显示该占位',
+  testWidgets('空态时 secondary 显示自己的外壳页（无需额外占位 API）',
       (tester) async {
     tester.view.physicalSize = const Size(1200, 800);
     tester.view.devicePixelRatio = 1.0;
@@ -58,6 +60,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('NO_DETAIL'), findsOneWidget);
+    expect(find.text('SHELL_EMPTY_STATE'), findsOneWidget);
   });
 }
