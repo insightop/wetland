@@ -66,7 +66,7 @@ Widget _collapseWidth(Widget child, Animation<double> animation) {
 Widget _collapseHeight(Widget child, Animation<double> animation) {
   return ClipRect(
     child: Align(
-      alignment: AlignmentDirectional.bottomCenter,
+      alignment: AlignmentDirectional.topCenter,
       heightFactor: 1.0 - animation.value,
       child: child,
     ),
