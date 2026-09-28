@@ -18,12 +18,20 @@ class SecondaryBody extends StatefulWidget {
   /// 详情栈为空时显示的占位页（如引导文案）。
   final WidgetBuilder? placeholder;
 
+  /// 详情栈发生任何变化（push/pop/replace/remove）时回调。
+  ///
+  /// 用途：布局需要据此决定单栏下由 body 还是 secondary 占满屏幕。
+  /// 用 [NavigatorObserver] 而非 `StackRouter` 的 ChangeNotifier —— 后者在
+  /// auto_route 的 `onPopPage` 路径上不会 `notifyAll`，pop 时收不到通知。
+  final VoidCallback? onStackChanged;
+
   const SecondaryBody({
     super.key,
     required this.navigatorKey,
     this.onRouterReady,
     this.index,
     this.placeholder,
+    this.onStackChanged,
   });
 
   @override
@@ -31,6 +39,24 @@ class SecondaryBody extends StatefulWidget {
 }
 
 class _SecondaryBodyState extends State<SecondaryBody> {
+  /// 每次 build 都返回**全新**的 observer 实例。
+  ///
+  /// [AutoRouter.navigatorObservers] 的文档明确要求：一个 [NavigatorObserver]
+  /// 实例只能被单个 Navigator 使用，复用到多个 Navigator 会触发断言。
+  /// 本方法也顺带在每次重建后重新触发一次回调（栈可能已变化）。
+  List<NavigatorObserver> _observers() => [
+        _StackChangedObserver(onChanged: _onChanged),
+      ];
+
+  void _onChanged() {
+    // didPush/didPop 可能在 build 期间触发，直接回调会让上层 setState 撞上
+    // "setState() called during build"，故统一延到本帧结束后再通知。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      widget.onStackChanged?.call();
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -119,7 +145,35 @@ class _SecondaryBodyState extends State<SecondaryBody> {
     return AutoRouter(
       navigatorKey: widget.navigatorKey,
       placeholder: widget.placeholder,
+      navigatorObservers: _observers,
       builder: widget.placeholder == null ? null : _buildWithPlaceholder,
     );
   }
+}
+
+/// 把 Navigator 的栈变化事件转成单一回调。
+///
+/// [NavigatorObserver] 是 Flutter 原生的导航事件源，相比 `StackRouter` 的
+/// ChangeNotifier 更可靠：auto_route 在 `onPopPage` 路径上不会 `notifyAll`，
+/// 仅靠监听 router 会漏掉 pop。
+class _StackChangedObserver extends NavigatorObserver {
+  _StackChangedObserver({required this.onChanged});
+
+  final VoidCallback onChanged;
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      onChanged();
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      onChanged();
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      onChanged();
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) =>
+      onChanged();
 }

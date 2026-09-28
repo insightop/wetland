@@ -3,7 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:wetland_example/main.dart';
 
 void main() {
-  testWidgets('横转竖后当前 tab 的详情栈应迁移到竖屏全屏栈顶部，可 back 回 tab 页',
+  // 新架构下不再有导航栈迁移：横转竖只是 bodyRatio 从 0.35 插值到 0.0，
+  // 详情始终留在同一个 secondary navigator 里。本用例验证该行为等价于旧
+  // 「迁移」用例的用户可见结果：详情仍在、back 可回列表页。
+  testWidgets('横转竖后详情仍占满屏幕且可 back 回列表页（无导航栈迁移）',
       (tester) async {
     tester.view.physicalSize = const Size(1200, 1000);
     tester.view.devicePixelRatio = 1.0;

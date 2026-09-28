@@ -1,3 +1,5 @@
+import "dart:math" as math;
+
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 
@@ -13,6 +15,7 @@ import "blocs/wetland_bloc.dart";
 // import "pages/default_placeholder_page.dart";
 import "widgets/secondary_body.dart";
 import "utils/destination.dart";
+import "utils/secondary_stack.dart";
 import "utils/wetland_scope.dart";
 
 /// 逻辑异或：仅当 [a]、[b] 恰好一个为真时返回 true。
@@ -93,12 +96,12 @@ class Wetland extends StatefulWidget {
 
 class _WetlandState extends State<Wetland> {
   late List<GlobalKey<NavigatorState>> _secondaryKeys;
-  /// 保存每个 tab 的 secondary [StackRouter] 引用。
-  /// 在横屏 secondaryBody build 时写入；push/pop 后 controller 的 stack 仍最新，
-  /// 转竖屏（widget 卸载）后仍能读到，用于迁移。
+
+  /// 每个 tab 的 secondary [StackRouter] 引用。
+  ///
+  /// 用于两件事：① 监听详情栈变化以驱动布局（单栏时决定由谁占满屏幕）；
+  /// ② 供 [SecondaryBody] 上报自身 router。
   final List<StackRouter?> _secondaryRouters = [];
-  /// 上一个 mode，用于监听 dual→single 迁移时机。
-  WetlandMode _previousMode = WetlandMode.dual;
 
   @override
   void initState() {
@@ -145,69 +148,51 @@ class _WetlandState extends State<Wetland> {
     return BlocProvider(
       create: (context) => WetlandBloc(),
       child: BlocListener<WetlandBloc, WetlandState>(
-        listener: (context, state) {
-          _applySystemUi(state.mode);
-          // 从 dual 切到 single（横转竖）：把当前 tab 的 secondary 详情栈迁移到根。
-          if (_previousMode == WetlandMode.dual &&
-              state.mode == WetlandMode.single) {
-            final tabIndex =
-                _safeIndex(state.index, widget.destinations?.length ?? 0);
-            // post-frame 时 secondary 已随竖屏卸载，但 captured controller 的
-            // stack 仍保留迁移前的详情序列，此时读取安全。
-            final router =
-                (tabIndex < _secondaryRouters.length)
-                    ? _secondaryRouters[tabIndex]
-                    : null;
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted) return;
-              _migrateSecondaryToPrimary(context, tabIndex, router);
-            });
-          }
-          // 从 single 切到 dual（竖转横）：把根栈上的详情回填到当前 tab 的
-          // secondary，使变宽后立即呈现左右双栏。
-          if (_previousMode == WetlandMode.single &&
-              state.mode == WetlandMode.dual) {
-            final tabIndex =
-                _safeIndex(state.index, widget.destinations?.length ?? 0);
-            // 与迁移相反：此刻 secondary 正在挂载，其 router 引用还没写入
-            // [_secondaryRouters]，需等就绪后再回填，故把首帧查询也放进
-            // post-frame 回调（见 [_backfillPrimaryToSecondary]）。
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted) return;
-              _backfillPrimaryToSecondary(context, tabIndex, attempt: 0);
-            });
-          }
-          _previousMode = state.mode;
-        },
+        // 布局切换不再迁移导航栈：secondary 槽常驻挂载，单/双栏差异完全由
+        // [AdaptiveLayout.bodyRatio] 的动画插值表达（见下方 build）。
+        listener: (context, state) => _applySystemUi(state.mode),
         child: BlocBuilder<WetlandBloc, WetlandState>(
           builder: (context, state) {
             // 当 destinations 数量变化（如被 shrink）时，clamp 防止越界。
             final destCount = widget.destinations?.length ?? 0;
             final safeIndex = _safeIndex(state.index, destCount);
+            final hasDetail = _currentTabHasDetail(safeIndex);
+            final targetRatio = _targetBodyRatio(state.mode, hasDetail);
+
             return WetlandScope(
               secondaryKeys: _secondaryKeys,
-              child: AdaptiveLayout(
-                //! 比例
-                bodyRatio: 0.35,
-                //! 过渡动画
-                transitionDuration: widget.transitionDuration,
-                //! 主导航
-                primaryNavigation: widget.destinations != null
-                    ? SlotLayout(
-                        config: <Breakpoint, SlotLayoutConfig>{
-                          Breakpoints.mediumLargeAndUp: SlotLayout.from(
-                            key: const Key('Primary Navigation'),
-                            builder: (_) {
-                              _setMode(context, WetlandMode.dual);
+              // bodyRatio 用 TweenAnimationBuilder 插值：布局在动画第一帧起就按
+              // 目标比例拉伸，"进详情/返回""单⇄双栏"因此都是同一条连续动画，
+              // 不再需要迁移导航栈，也没有"过渡结束才补一刀"的空窗。
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: targetRatio, end: targetRatio),
+                duration: widget.transitionDuration,
+                curve: Curves.easeInOutCubic,
+                builder: (context, ratio, child) => AdaptiveLayout(
+                  //! 比例（动画中）
+                  bodyRatio: ratio,
+                  //! 该槽位切换动画由我们自己的 ratio 插值承担，
+                  //! 关闭其内部动画避免两套动画互相干扰。
+                  internalAnimations: false,
+                  //! 过渡动画
+                  transitionDuration: widget.transitionDuration,
+                  //! 主导航
+                  primaryNavigation: widget.destinations != null
+                      ? SlotLayout(
+                          config: <Breakpoint, SlotLayoutConfig>{
+                            Breakpoints.mediumLargeAndUp: SlotLayout.from(
+                              key: const Key('Primary Navigation'),
+                              builder: (_) {
+                                _setMode(context, WetlandMode.dual);
 
-                              return PrimaryNavigation(
-                                widget.destinations!,
-                                leading: widget.primaryNavigationRailLeading,
-                                trailing: widget.primaryNavigationRailTrailing,
-                              );
-                            },
-                            inAnimation: (child, animation) =>
-                                AdaptiveScaffold.leftOutIn(child, animation),
+                                return PrimaryNavigation(
+                                  widget.destinations!,
+                                  leading: widget.primaryNavigationRailLeading,
+                                  trailing: widget.primaryNavigationRailTrailing,
+                                );
+                              },
+                              inAnimation: (child, animation) =>
+                                  AdaptiveScaffold.leftOutIn(child, animation),
                             inCurve: Curves.linear,
                             // outAnimation: (child, animation) =>
                             // AdaptiveScaffold.leftInOut(child, animation),
@@ -246,53 +231,56 @@ class _WetlandState extends State<Wetland> {
                   config: <Breakpoint, SlotLayoutConfig>{
                     Breakpoints.standard: SlotLayout.from(
                       key: const Key('Primary Body MediumLarge'),
-                      builder: (_) => widget.destinations != null
-                          ? widget.destinations![safeIndex].page
-                          // : Text('test')
-                          : widget.primaryBody!,
+                      builder: (_) => _mountedSlot(
+                        widget.destinations != null
+                            ? widget.destinations![safeIndex].page
+                            : widget.primaryBody!,
+                      ),
                     ),
                   },
                 ),
                 //! 次要主体
+                //
+                // 始终挂载（不再绑定 mediumLargeAndUp）：详情永远留在自己的
+                // navigator 里，单/双栏差异完全交给 bodyRatio 表达，因此不存在
+                // 「布局切换后还要迁移导航栈」的中间态。窄屏下该槽宽为 0 时
+                // Navigator 仍在树上，navigatorKey.currentState 保持可用。
                 secondaryBody: widget.destinations != null
                     ? SlotLayout(
                         config: <Breakpoint, SlotLayoutConfig>{
-                          Breakpoints.mediumLargeAndUp: SlotLayout.from(
+                          Breakpoints.standard: SlotLayout.from(
                             key: const Key('Secondary Body'),
-                            builder: (_) => IndexedStack(
-                              index: safeIndex,
-                              children: [
-                                for (var i = 0;
-                                    i < widget.destinations!.length;
-                                    i++)
-                                  SecondaryBody(
-                                    navigatorKey: _secondaryKeys[i],
-                                    index: i,
-                                    onRouterReady: _onSecondaryRouterReady,
-                                    placeholder: widget.secondaryPlaceholder,
-                                  ),
-                              ],
+                            builder: (_) => _mountedSlot(
+                              IndexedStack(
+                                index: safeIndex,
+                                children: [
+                                  for (var i = 0;
+                                      i < widget.destinations!.length;
+                                      i++)
+                                    SecondaryBody(
+                                      navigatorKey: _secondaryKeys[i],
+                                      index: i,
+                                      onRouterReady: _onSecondaryRouterReady,
+                                      onStackChanged: _onSecondaryStackChanged,
+                                      placeholder: widget.secondaryPlaceholder,
+                                    ),
+                                ],
+                              ),
                             ),
-                            //! inAnimation 与 outAnimation 必须使用**同一个**函数，
+                            //! inAnimation 与 outAnimation 必须使用**同一个**函数。
                             //! 否则 AnimatedSwitcher 切换时会改变 transition 的
-                            //! widget 树形状：之前只设 outAnimation，dual→single
-                            //! 出场时旧子树会从 `config` 被重新包成
-                            //! `SlideTransition(config)`，多出的一层导致 Element
-                            //! 不匹配，整棵 IndexedStack→SecondaryBody→AutoRouter
-                            //! 被销毁并重建为空栈，详情消失、只剩 primary 全屏；
-                            //! 且重建出的空 secondary router 会继续挂在根 router 上
-                            //! 直到出场动画（transitionDuration，默认 1000ms）结束，
-                            //! 阻塞迁移 —— 这就是用户看到的"primary 先抢占地，之后
-                            //! secondary 才 push 进来"。两层形状一致后，出场子树被
-                            //! 原样复用，详情在整个过渡期保持可见。
+                            //! widget 树形状，导致 Element 无法复用、整棵
+                            //! IndexedStack→SecondaryBody→AutoRouter 被销毁重建。
+                            //! 本槽已改为常驻（key 恒定），理论上不再触发切换，
+                            //! 保留同形设置作为防御。
                             inAnimation: _keepOnScreen,
-                            // outAnimation: (child, animation) => AdaptiveScaffold.rightOutIn(child, animation),
                             outAnimation: _keepOnScreen,
                             outCurve: Curves.easeInOutCubic,
                           ),
                         },
                       )
                     : null,
+                ),
               ),
             );
           },
@@ -309,158 +297,106 @@ class _WetlandState extends State<Wetland> {
     }
   }
 
-  /// 某 tab 的 secondary [StackRouter] 挂载就绪时，记录其引用。
-  /// 保存 controller 引用后，即便后续 push/pop 或转竖屏 widget 卸载，
-  /// 都能通过该引用读到 controller 的最新 stack。
+  /// 某 tab 的 secondary [StackRouter] 挂载就绪时记录引用。
+  ///
+  /// 只接受每个 tab 的 NestedStackRouter；瞬时帧里 AutoRouter.of 可能解析到
+  /// 根 AppRouter，存下来会覆盖 per-tab 引用。
   void _onSecondaryRouterReady(int index, StackRouter router) {
     if (index < 0 || index >= _secondaryRouters.length) return;
-    // 只接受每个 tab 的 NestedStackRouter。旋转重建的瞬时帧里 AutoRouter.of 可能
-    // 解析到根 AppRouter（RootStackRouter），若存下来会覆盖 per-tab 引用，导致迁移
-    // 目标错误。
     if (router is! NestedStackRouter) return;
     _secondaryRouters[index] = router;
   }
 
-  /// 把当前 tab 的 secondary 详情栈迁移到根 router 顶部，使竖屏根栈顶部为当前详情页。
+  /// 详情栈变化时重建布局（单栏下由谁占满屏幕取决于此）。
   ///
-  /// 详情序列只取 [tabIndex] 对应的 per-tab [NestedStackRouter] 栈里**真实详情页**：
-  /// - 跳过栈底的外壳页（index 0，nested router 的初始 `PlaceholderRoute`，
-  ///   它只负责让 secondary 的 `Navigator` 存在，不是用户选中的详情）；
-  /// - 跳过 `autoFilled` 的页（Home 这类由 auto_route 自动补齐的父级壳）。
-  ///
-  /// 仅当过滤后仍有详情时才迁移，因此空态（栈里只有外壳页）不会误把
-  /// primary 再压一层。这些详情直接以自身的 [PageRouteInfo] push 到根 router ——
-  /// 根 collection 里已存在同名的根级详情 route（如 DetailRoute），因此不会
-  /// buildPathTo 重复补齐 Home。
-  void _migrateSecondaryToPrimary(BuildContext context, int tabIndex,
-      StackRouter? router) {
-    if (router == null) return;
-    final stack = router.stack;
-    if (stack.length <= 1) return; // 只有外壳页 = 无详情，无需迁移
-    final detailRoutes = <PageRouteInfo>[];
-    for (var i = 0; i < stack.length; i++) {
-      if (i == 0) continue; // 跳过栈底外壳页（Navigator 载体）
-      final rt = stack[i].routeData.route;
-      if (rt.autoFilled) continue; // 跳过 Home 等自动补齐的父级壳
-      detailRoutes.add(rt.toPageRouteInfo());
-    }
-    if (detailRoutes.isEmpty) return;
-    Log.d('Migrate ${detailRoutes.length} detail route(s) from secondary'
-        ' (tab #$tabIndex) to portrait root stack:'
-        ' ${detailRoutes.map((r) => r.routeName).toList()}');
-    final rootRouter = AutoRouter.of(context).root;
-    _pushToRootWhenTopMost(rootRouter, detailRoutes, attempt: 0);
+  /// 由 [SecondaryBody] 的 [NavigatorObserver] 触发，覆盖 push/pop/replace/remove。
+  void _onSecondaryStackChanged() {
+    if (mounted) setState(() {});
   }
 
-  /// 把竖屏根栈上的详情回填到 [tabIndex] 对应的 secondary 栈，使窄→宽切换后
-  /// 立即呈现左右双栏，无需用户先返回上一页。
-  ///
-  /// 与 [_migrateSecondaryToPrimary] 互为逆操作，取根的规则对称：
-  /// - 跳过根栈首项（app 的首页/tab 外壳，如 `HomeRoute`）—— 它是承载 `Wetland`
-  ///   的容器页，不是用户选中的详情；
-  /// - 跳过 `autoFilled` 的页（auto_route 自动补齐的父级壳）；
-  /// - 其余按原顺序回填，保留竖屏期间的下钻层级。
-  ///
-  /// 时序：本方法在模式切到 dual 后的 post-frame 触发。此刻 secondary 的
-  /// [NestedStackRouter] 往往尚未就绪：initial 路由由 auto_route 在
-  /// `didChangeDependencies` 的 post-frame 里 setup，Navigator 随后才存在，
-  /// 其引用也要等 [SecondaryBody] 上报后才会写入 [_secondaryRouters]。
-  /// 因此与 [_pushToRootWhenTopMost] 一样按帧重试，直到该 tab 的 router：
-  /// 1. 仍是 [NestedStackRouter]，且挂在根 router 的 `childControllers` 下
-  ///    （排除上一轮 dual 周期遗留、已卸载的旧引用）；
-  /// 2. 其 `Navigator` 已挂载（等价于外壳页已入栈）。
-  ///
-  /// 必须等外壳页就位再 push：否则详情先入栈，随后 `setupInitialRoutes` 会把
-  /// 外壳页压到详情之上，详情反被盖住。
-  ///
-  /// 回填后再把详情从根栈移除，使根栈只剩 tab 页。顺序是先 push 后移除，
-  /// 避免中间帧两侧都没有详情而闪回列表页。
-  void _backfillPrimaryToSecondary(
-    BuildContext context,
-    int tabIndex, {
-    required int attempt,
-  }) {
-    // 300 帧 ≈ 5s@60fps，与迁移重试上限一致，足以覆盖 1000ms 过渡期。
-    if (attempt > 300) {
-      Log.w(
-        'Abandon backfilling portrait root details to secondary'
-        ' (tab #$tabIndex): secondary router not ready after $attempt frames',
-      );
-      return;
-    }
-    // 无 destinations（[Wetland.primaryBody] 模式）时根本没有 secondary，
-    // 直接返回，避免无意义地空转重试。这是结构性判断，与"router 尚未写入
-    // 引用"的时序问题不同，后者需要重试。
-    if (_secondaryRouters.isEmpty) return;
-    final rootRouter = AutoRouter.of(context).root;
-    final rootStack = rootRouter.stack;
-    if (rootStack.length <= 1) return; // 只有首页/tab 外壳 = 无详情
-    final detailRoutes = <PageRouteInfo>[];
-    final detailEntries = <RouteData>[];
-    for (var i = 1; i < rootStack.length; i++) {
-      final entry = rootStack[i];
-      final rt = entry.routeData.route;
-      if (rt.autoFilled) continue; // 跳过 Home 等自动补齐的父级壳
-      detailRoutes.add(rt.toPageRouteInfo());
-      detailEntries.add(entry.routeData);
-    }
-    if (detailRoutes.isEmpty) return;
-
-    final router = (tabIndex < _secondaryRouters.length)
-        ? _secondaryRouters[tabIndex]
-        : null;
-    if (router is! NestedStackRouter ||
-        router.navigatorKey.currentState == null ||
-        !rootRouter.childControllers.contains(router)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _backfillPrimaryToSecondary(context, tabIndex, attempt: attempt + 1);
-      });
-      return;
-    }
-
-    Log.d('Backfill ${detailRoutes.length} detail route(s) from portrait root'
-        ' to secondary (tab #$tabIndex):'
-        ' ${detailRoutes.map((r) => r.routeName).toList()}');
-    // 先 push 再移除：两者都在同一帧内同步生效，任一帧都不会出现"两侧都没有
-    // 详情"的空白中间态。
-    router.pushAll(detailRoutes);
-    for (final entry in detailEntries.reversed) {
-      rootRouter.removeRoute(entry);
-    }
+  /// 当前选中 tab 的 secondary 是否有用户详情。
+  bool _currentTabHasDetail(int safeIndex) {
+    if (safeIndex >= _secondaryRouters.length) return false;
+    return secondaryHasDetail(_secondaryRouters[safeIndex]);
   }
 
-  /// 等根 router 成为 top-most 后再把 [routes] push 到根栈。
+  /// 目标 [AdaptiveLayout.bodyRatio]：决定 body 占宽比例。
+  /// - 双栏（dual）：0.35，左宽右窄的三栏观感；
+  /// - 单栏且详情栈非空：0.0 —— body 收窄为 0，secondary 占满全屏；
+  /// - 单栏且无详情：1.0 —— secondary 收窄为 0，body（tab 列表页）占满。
   ///
-  /// 旋转瞬间 secondaryBody 的 NestedStackRouter 尚未完全 dispose，仍挂在根 router
-  /// 的 childControllers 下。此时直接 `rootRouter.pushAll` 会经 auto_route 的
-  /// `_findStackScope` 解析到最内层仍存活的 router（它能处理同名的 DetailRoute），
-  /// 导致详情被压进已卸载的 tab 壳而非根栈。必须等这些 secondary router 全部卸载、
-  /// 根 router 成为 top-most 后，push 才会命中根级 DetailRoute。
-  ///
-  /// disposal 会在竖屏布局切换动画（transitionDuration，默认 1000ms）结束后发生，
-  /// 因此用帧率无关的宽松重试上限覆盖整个过渡期，一旦 root 成为 top-most 立即迁移。
-  void _pushToRootWhenTopMost(
-    RootStackRouter rootRouter,
-    List<PageRouteInfo> routes, {
-    required int attempt,
-  }) {
-    // 300 帧 ≈ 5s@60fps，足以覆盖默认 1000ms 过渡期及二次分发后剩余帧。
-    if (attempt > 300) {
-      Log.w(
-        'Abandon migrating ${routes.length} detail route(s) to portrait root:'
-        ' root never became top-most after $attempt frames',
-      );
-      return;
-    }
-    if (!rootRouter.isTopMost) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _pushToRootWhenTopMost(rootRouter, routes, attempt: attempt + 1);
-      });
-      return;
-    }
-    rootRouter.pushAll(routes);
+  /// 单/双栏切换与「进详情/返回」因此都退化为同一个数值的插值，
+  /// 由 [AdaptiveLayout] 的布局在动画第一帧起就按目标比例拉伸，
+  /// 不再需要迁移导航栈。
+  double _targetBodyRatio(WetlandMode mode, bool hasDetail) {
+    if (mode == WetlandMode.dual) return 0.35;
+    return hasDetail ? 0.0 : 1.0;
   }
+
+  /// 调用方内容可舒适布局的槽宽下限（逻辑像素）。
+  ///
+  /// [bodyRatio] 收缩槽位时，槽会经过 0.5px、5px 这类极窄宽度。低于此宽度时
+  /// 调用方内容（如含 `ListTile` 的列表页，其 leading 需要数十像素；或带
+  /// padding 的居中 `Column`）会抛 `Leading widget consumes the entire tile
+  /// width` / `RenderFlex overflowed`。库不能假设调用方内容能抗极小宽度，
+  /// 故统一按此值兜底。
+  ///
+  /// 取值来自实测：例子的列表页在 150 以下开始 `RenderFlex overflowed`
+  /// （120/130/140 均溢出，150 起稳定）。这里取 200 留余量，同时**必须小于**
+  /// 双栏在最小断点（840dp）下的 body 实宽（实测 268.1），否则合法的窄双栏
+  /// 内容会被无谓裁切。
+  static const double _minRenderableSlotWidth = 200.0;
+
+  /// 槽位内容的守卫：**始终保留子树 State**，只隐藏或裁剪。
+  ///
+  /// 两条硬约束，缺一不可：
+  ///
+  /// 1. **子树常驻**：`WetlandNavigator.push` 依赖
+  ///    `navigatorKey.currentState != null` 判断「secondary 是否可用」。若窄宽时把
+  ///    子树替换为 `SizedBox.shrink()`，嵌套 [Navigator] 会被移出树，
+  ///    `currentState` 变 null，详情就会被误推进 primary（表现为竖屏详情变成
+  ///    全屏覆盖、右侧双栏失效）。
+  ///
+  /// 2. **widget 树形状恒定**：无论槽宽多少都必须返回**同一形状**的 widget 链。
+  ///    若按宽度阈值在「直接返回 child」与「包若干层」之间切换，Flutter 会因
+  ///    Element 无法复用而重建整棵子树 —— `AutoRouter` 的
+  ///    `didChangeDependencies` 随之重跑、`NestedStackRouter.setupInitialRoutes()`
+  ///    重新入栈，**已 push 的详情被抹掉**（实测：`stack=[/, detail]` → `[/]`）。
+  ///    故这里始终返回固定的 `ClipRect → Offstage → OverflowBox → child` 链，
+  ///    只让参数随宽度变化。
+  ///
+  /// 布局策略：槽宽不足时，先用 [OverflowBox] 给内容一个可渲染宽度
+  /// （`min(_minRenderableSlotWidth, 屏幕宽)` —— 屏幕本身更窄时不放大，
+  /// 避免为极窄设备引入横向裁切），再由 [ClipRect] 裁到真实槽宽。视觉上等价于
+  /// 内容随布局滑出屏幕。槽宽充足时 [OverflowBox] 不改写约束，等价于不包裹，
+  /// 因此双栏下内容仍按真实槽宽（而非屏幕宽）布局。
+  ///
+  /// 槽宽不足 1 逻辑像素时用 [Offstage] 停止绘制、命中与语义：既避免亚像素
+  /// 残影，也让默认跳过 offstage 的 finder 如实返回空。
+  static Widget _mountedSlot(Widget child) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final renderableWidth = math.min(
+          _minRenderableSlotWidth,
+          MediaQuery.sizeOf(context).width,
+        );
+        final tooNarrow = width < renderableWidth;
+        return ClipRect(
+          child: Offstage(
+            offstage: width < 1.0,
+            child: OverflowBox(
+              alignment: Alignment.centerLeft,
+              minWidth: tooNarrow ? renderableWidth : null,
+              maxWidth: tooNarrow ? renderableWidth : null,
+              child: child,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
 
   /// 根据模式应用系统 UI 样式。仅在模式变化时由 [BlocListener] 触发。
   void _applySystemUi(WetlandMode mode) {
