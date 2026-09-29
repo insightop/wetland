@@ -1,0 +1,35 @@
+# 发布到 pub.dev：仅由 vX.Y.Z tag 推送触发。
+#
+# 为什么必须是 tag 触发：pub.dev 的自动发布**只接受由 tag 推送触发的 GitHub
+# Actions workflow**，任何其他事件触发的发布都会被拒绝。
+# 参见 https://dart.dev/tools/pub/automated-publishing
+#
+# 为什么直接复用上游 workflow：官方**强烈建议**使用
+# `dart-lang/setup-dart/.github/workflows/publish.yml`。它由 Dart 团队维护，
+# 内部完成「申请 OIDC token → 安装 Flutter SDK → dry-run → 发布」全流程，
+# 无需在仓库里保存任何长期密钥，也不用手写发布步骤。
+#
+# 启用前提（在 pub.dev 后台，本仓库**已经开源**因此可正常配置）：
+#   pub.dev/packages/wetland/admin → Automated publishing
+#   → Enable publishing from GitHub Actions
+#      仓库:      insightop/wetland
+#      tag 模式:  v{{version}}
+# 该模式必须与下面的 `on.push.tags` 完全一致，否则发布会被拒绝。
+name: Publish to pub.dev
+
+on:
+  push:
+    tags:
+      # 与 pub.dev 后台配置的 tag 模式 `v{{version}}` 对应。
+      - "v[0-9]+.[0-9]+.[0-9]+"
+# 刻意不提供 workflow_dispatch：pub.dev 只接受 tag 触发的运行，
+# 手动触发注定失败，保留它反而会误导使用者。
+
+jobs:
+  publish:
+    name: 发布到 pub.dev
+    permissions:
+      # 申请 OIDC token 所必需，用于向 pub.dev 证明身份。
+      id-token: write
+      contents: read
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1

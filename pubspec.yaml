@@ -4,7 +4,7 @@ description: Adaptive navigation framework for Flutter. Three-column layout with
 homepage: https://github.com/insightop/wetland
 repository: https://github.com/insightop/wetland
 issue_tracker: https://github.com/insightop/wetland/issues
-version: 0.1.0
+version: 0.2.0
 
 environment:
   sdk: ">=3.10.0 <4.0.0"
