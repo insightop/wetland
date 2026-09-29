@@ -1,0 +1,46 @@
+# Dependabot：每周检查依赖更新并自动创建 PR。
+#
+# 覆盖三类依赖（对应仓库的三处依赖来源）：
+#   - pub（根包）：wetland 库本身的依赖；
+#   - pub（example）：示例应用的依赖，与根包独立；
+#   - github-actions：.github/workflows/ 里用到的 action 版本。
+version: 2
+updates:
+  # 根包依赖
+  - package-ecosystem: pub
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      # 把同一生态的常规更新合并成一个 PR，减少审查与 CI 负担。
+      pub-root:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  # example 依赖（独立于根包）
+  - package-ecosystem: pub
+    directory: /example
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      pub-example:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  # GitHub Actions 版本（含本仓库引用的上游 action）
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(ci)"
+    groups:
+      github-actions:
+        patterns: ["*"]
