@@ -14,6 +14,11 @@ on:
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
+  # 允许手动触发：只构建五平台并上传 artifact，**不创建 Release**（见 release
+  # job 的 if 守卫）。用途是在不切 tag 的前提下验证多平台构建与资产命名 ——
+  # 尤其是不要为了测试而推一个真 tag：publish.yml 的 tag 模式与本文件相同，
+  # 推 tag 会**同时触发向 pub.dev 的发布**，而那是不可撤回的。
+  workflow_dispatch:
 
 permissions:
   # 创建 Release 并上传产物需要写权限。
@@ -118,6 +123,9 @@ jobs:
   release:
     name: 创建 Release
     needs: build
+    # 仅在 tag 推送时创建 Release。手动触发只跑构建+artifact 上传，
+    # 这样验证流程不会产生指向任意提交的 Release。
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: 下载全部产物
