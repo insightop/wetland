@@ -33,6 +33,13 @@ class BottomNavigation extends StatelessWidget {
 
     return BlocBuilder<WetlandBloc, WetlandState>(
       builder: (context, state) {
+        // Flutter 的 `BottomNavigationBar` 断言 `items.length >= 2`
+        // （`bottom_navigation_bar.dart:249`）。单 tab 应用是合法配置，因此在
+        // 不足两个 destination 时**不构建**底导，而不是让断言打崩调用方：
+        // 此时没有可切换的目标，底导本就没有意义，destination 内容照常渲染。
+        if (destinations.length < 2) {
+          return const SizedBox.shrink();
+        }
         return BottomNavigationBar(
           selectedLabelStyle: selectedLabelTextStyle,
           unselectedLabelStyle: unSelectedLabelTextStyle,

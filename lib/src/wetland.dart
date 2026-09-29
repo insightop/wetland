@@ -73,6 +73,22 @@ Widget _collapseHeight(Widget child, Animation<double> animation) {
   );
 }
 
+/// 判断一条嵌套路由栈的首项是否为 wetland 约定的**空路径外壳页**。
+///
+/// 这是本库最重要的隐性约定：每个 destination 的嵌套路由集合必须以一条
+/// `path: ''` 的外壳路由开头。它有两个作用：
+/// 1. 让嵌套 [Navigator] 始终存在（否则详情无处可推）；
+/// 2. 作为「右侧还没有详情」时的空态画面。
+///
+/// 违反约定会让详情**静默不可见**：push 成功、但永远画不出来。因此本函数
+/// 公开为纯谓词，调用方（与库自身）都能据此校验配置。
+///
+/// 空栈视为**满足**约定（尚无路由时不算违规）。
+bool hasRequiredShellPage(List<AutoRoutePage> stack) {
+  if (stack.isEmpty) return true;
+  return stack.first.routeData.route.hasEmptyPath;
+}
+
 /// 自适应导航根组件。
 ///
 /// 根据屏幕尺寸自动切换布局：
@@ -107,11 +123,19 @@ class Wetland extends StatefulWidget {
     this.useDrawer = false,
     this.primaryNavigationRailLeading,
     this.primaryNavigationRailTrailing,
-    // this.placeholder = const DefaultPlaceholderPage(),
     this.transitionDuration = const Duration(milliseconds: 1000),
   }) : assert(
          logicalXor(destinations == null, primaryBody == null),
          'Only one of [destinations] or [primaryBody] can be set',
+       ),
+       // 空列表是**调用方错误**而非可降级的运行状态：它会让 body 取
+       // `destinations[0]` 时抛 `RangeError`。在构造处断言能让错误暴露在
+       // 出错的那一行，而不是若干帧后的构建期。
+       //
+       // 单个 destination 是**合法**配置（单 tab 应用），因此这里只拒绝空列表。
+       assert(
+         destinations == null || destinations.isNotEmpty,
+         '[destinations] must not be empty; provide at least one destination',
        );
 
   @override
@@ -170,6 +194,34 @@ class _WetlandState extends State<Wetland> {
 
   /// 上一次生效的布局模式，用于识别模式**边沿**（只在真正切换时迁移一次）。
   WetlandMode? _previousMode;
+
+  /// 上一次已应用到系统 UI 的模式。
+  ///
+  /// 与 [_previousMode] 分开：系统 UI 需要在**首帧**就应用一次，而它不在
+  /// `BlocListener` 的触发范围内（listener 只在状态**变化**时触发；应用以宽屏
+  /// 启动时模式从未变化，导致状态栏/导航栏从未被隐藏，已实测）。
+  WetlandMode? _appliedSystemUiMode;
+
+  /// 由**布局本身**推导当前模式，而不是「哪个槽位的 builder 恰好跑了」。
+  ///
+  /// 旧实现把模式写在槽位 builder 里（`_setMode`），于是：
+  /// - `primaryBody` 配置下两个导航槽都不构建 ⇒ 模式永远停在默认 `dual`，
+  ///   详情在两个方向都不可见（已实测：详情不在 widget 树中）；
+  /// - 以宽屏启动时模式从未变化 ⇒ 系统 UI 从未被应用。
+  ///
+  /// 改为在此处推导后，模式在**首帧**就正确，且与布局无关地覆盖所有配置。
+  ///
+  /// 判定复用框架自己的断点谓词 [Breakpoint.isActive]，而不是直接比较
+  /// `MediaQuery` 宽度：该谓词还包含高度条件，自己重写会在部分视口与
+  /// `AdaptiveLayout` 实际选择的槽位不一致。
+  WetlandMode _derivedMode(BuildContext context) {
+    // 未提供 destinations ⇒ 不存在 secondary 区域，详情一律走全屏根路由，
+    // 主内容占满整屏，因此语义上等同单栏。
+    if (widget.destinations == null) return WetlandMode.single;
+    return Breakpoints.mediumLargeAndUp.isActive(context)
+        ? WetlandMode.dual
+        : WetlandMode.single;
+  }
 
   StackRouter? _safeTabRouter(int index) {
     if (index < 0 || index >= _secondaryRouters.length) return null;
@@ -255,7 +307,32 @@ class _WetlandState extends State<Wetland> {
             final destCount = widget.destinations?.length ?? 0;
             final safeIndex = _safeIndex(state.index, destCount);
             _currentIndex = safeIndex;
-            final targetRatio = _targetBodyRatio(state.mode, safeIndex);
+
+            // 模式由**布局**推导（见 [_derivedMode]），而不是由哪个槽位 builder
+            // 跑了决定。这里把推导结果同步进 bloc，使既有的迁移边沿逻辑
+            // （BlocListener）保持不变地继续工作。
+            final mode = _derivedMode(context);
+            if (state.mode != mode) {
+              // 与旧的槽位 builder 写入时机一致（同样发生在 build 期间），
+              // 因此不会引入额外的一帧延迟 —— 这一点很关键：迁移若晚一帧会
+              // 露出「源已移除、目标未上台」的空白帧。
+              _setMode(context, mode);
+            }
+
+            // 系统 UI：不能只依赖 BlocListener（它只在状态变化时触发）。应用以
+            // 宽屏启动时模式从未变化，旧实现因此**从未隐藏状态栏/导航栏**（已实测
+            // `SystemChrome` 只有 MaterialApp 的两次默认调用）。此处按「已应用的
+            // 模式」去重后补齐首帧。平台调用排在帧末，避免在 build 中产生副作用。
+            if (_appliedSystemUiMode != mode) {
+              _appliedSystemUiMode = mode;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) _applySystemUi(mode);
+              });
+            }
+
+            // bodyRatio 跟随**推导出的**模式，与 mode 保持同一来源。
+            final targetRatio = _targetBodyRatio(mode, safeIndex);
+
             // 用 build 里看到的模式初始化「上一次模式」。
             //
             // 不能只靠 listener 自己累积：若应用启动即处于 dual（宽屏）且模式
@@ -263,7 +340,7 @@ class _WetlandState extends State<Wetland> {
             // 于是首次「dual→single」边沿被漏掉 —— 实测表现为横转竖后详情
             // 完全没有迁移（详情消失）。build 在首次渲染时必然执行，且此刻尚未
             // 可能发生迁移，因此在这里兜底初始化是最稳的。
-            _previousMode ??= state.mode;
+            _previousMode ??= mode;
 
             return WetlandScope(
               secondaryKeys: _secondaryKeys,
@@ -314,8 +391,6 @@ class _WetlandState extends State<Wetland> {
                             Breakpoints.mediumLargeAndUp: SlotLayout.from(
                               key: const Key('Primary Navigation'),
                               builder: (_) {
-                                _setMode(context, WetlandMode.dual);
-
                                 return PrimaryNavigation(
                                   widget.destinations!,
                                   leading: widget.primaryNavigationRailLeading,
@@ -355,10 +430,8 @@ class _WetlandState extends State<Wetland> {
                         config: <Breakpoint, SlotLayoutConfig>{
                           Breakpoints.small: SlotLayout.from(
                             key: const Key('Bottom Navigation'),
-                            builder: (_) {
-                              _setMode(context, WetlandMode.single);
-                              return BottomNavigation(widget.destinations!);
-                            },
+                            builder: (_) =>
+                                BottomNavigation(widget.destinations!),
                             //! 进场只淡入：槽位的**位置**已由框架的
                             //! `bottomMargin` 补间平滑驱动（实测槽位 top 从 844
                             //! 平滑移到 793.6），再叠加滑动会重复位移。
@@ -372,10 +445,8 @@ class _WetlandState extends State<Wetland> {
                           ),
                           Breakpoints.medium: SlotLayout.from(
                             key: const Key('Bottom Navigation'),
-                            builder: (_) {
-                              _setMode(context, WetlandMode.single);
-                              return BottomNavigation(widget.destinations!);
-                            },
+                            builder: (_) =>
+                                BottomNavigation(widget.destinations!),
                             //! 进场只淡入：槽位的**位置**已由框架的
                             //! `bottomMargin` 补间平滑驱动（实测槽位 top 从 844
                             //! 平滑移到 793.6），再叠加滑动会重复位移。

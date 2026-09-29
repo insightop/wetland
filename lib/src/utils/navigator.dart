@@ -71,34 +71,88 @@ class WetlandNavigator {
     if (fromSecondary) {
       Log.d('Push [${route.routeName}] to [SecondaryBody#$index] (drill-down)');
       return await secondaryRouter.push<T>(route);
-    } else {
-      Log.d('Push [${route.routeName}] to [SecondaryBody#$index] (replace)');
-      // 保留栈底的外壳页（nested router 的初始页），只替换其上的详情层，
-      // 这样 pop 详情后能回到外壳页，而不会落到空栈。
-      final stack = secondaryRouter.stack;
-      final shell = stack.isNotEmpty
-          ? [stack.first.routeData.route.toPageRouteInfo()]
-          : <PageRouteInfo>[];
-      await secondaryRouter.replaceAll([...shell, route]);
-      return null;
     }
+
+    // 从主列表进入详情：**替换**该 tab 上已有的详情层（与单栏 `replace` 一致），
+    // 但保留栈底外壳页，pop 详情后回到外壳页而非空栈。
+    //
+    // 实现要点：不能再用 `replaceAll`。它内部走 `_pushAll`，而 `_pushAll` 创建页面
+    // 时**不传 `popCompleter`**（auto_route `routing_controller.dart:787-805`），导致
+    // `RouteData.popped` 立即以 null 完成 —— 详情的结果永远无法回传。实测表现为
+    // 同一个 `await push<String>()` 在单栏返回 `'RET'`、双栏返回 `null`。
+    //
+    // 改为「先移除外壳页之上的详情层，再用带结果的 `push`」，语义与单栏、下钻一致：
+    // 返回的 Future 在详情被 pop 时完成并携带结果。
+    final stale = [
+      for (var i = 1; i < secondaryRouter.stack.length; i++)
+        secondaryRouter.stack[i].routeData,
+    ];
+    for (final entry in stale) {
+      secondaryRouter.removeRoute(entry);
+    }
+    Log.d('Push [${route.routeName}] to [SecondaryBody#$index] (replace)');
+    return await secondaryRouter.push<T>(route);
   }
 
+  /// 当前是否**存在由本库托管的详情**可被 pop。
+  ///
+  /// 调用方可用它安全地守卫返回按钮：`canPop` 为 false 时不要调用 [pop]，
+  /// 或改用 [maybePop]。判定只关注「本库自己的详情」，不涉及 destination 本身，
+  /// 因此横竖屏语义一致。
+  bool get canPop {
+    final scope = WetlandScope.maybeOf(context);
+    if (scope == null) return context.router.canPop();
+    final state = context.read<WetlandBloc>().state;
+    if (state.mode == WetlandMode.single) {
+      return scope.rootDetails?.hasDetail ?? false;
+    }
+    return _secondaryDetailOf(scope, state.index).isNotEmpty;
+  }
+
+  /// 仅当存在本库托管的详情时才 pop，并返回是否真的 pop 了。
+  ///
+  /// 相当于「安全版 [pop]」：无详情时不做任何事并返回 false，绝不触碰
+  /// destination 本身或其外壳页，因此可以无条件绑定到返回按钮。
+  Future<bool> maybePop<T extends Object?>([T? result]) async {
+    if (!canPop) return false;
+    pop<T>(result);
+    return true;
+  }
+
+  /// 弹出本库托管的详情。**只影响自己拥有的详情**：
+  /// - 单栏：仅当根 navigator 上有托管的详情时才 pop；
+  /// - 双栏：仅 pop 当前 tab 外壳页**之上**的详情层。
+  ///
+  /// 无可 pop 的详情时是 **no-op**（不弹 destination，也不弹外壳页）。
+  ///
+  /// 历史教训：旧实现会 fall through 到 `context.router.pop()`，实测在单栏
+  /// destination 根页面上调用会**把整棵 Wetland 弹掉**（`Wetland` 存活 1→0、白屏、
+  /// 无任何异常）；双栏空态则弹掉外壳页，导致此后推入的详情永远不可见。
+  /// 也不能改用 auto_route 的 `maybePop`：它在本级 navigator 拒绝后会递归到
+  /// `_parent`（`routing_controller.dart:1215-1225`），仍会弹出 destination。
   void pop<T extends Object?>([T? result]) {
     final scope = WetlandScope.maybeOf(context);
     if (scope == null) {
+      // 不在 Wetland 子树内：没有可归属的详情，保持旧有直通行为。
       context.router.pop<T>(result);
       return;
     }
     final state = context.read<WetlandBloc>().state;
-    // 单栏：详情在根 navigator 上，pop 根栈顶部。
+    // 单栏：详情在根 navigator 上。
     if (state.mode == WetlandMode.single) {
       final rootDetails = scope.rootDetails;
       if (rootDetails != null && rootDetails.hasDetail) {
         rootDetails.pop<T>(result);
         return;
       }
-      context.router.pop<T>(result);
+      // 无托管详情：no-op（绝不弹 destination）。
+      Log.d('Pop ignored: no root detail owned (single)');
+      return;
+    }
+    // 双栏：pop 外壳页之上的最顶层详情（`_secondaryDetailOf` 已排除外壳页）。
+    final details = _secondaryDetailOf(scope, state.index);
+    if (details.isEmpty) {
+      Log.d('Pop ignored: no secondary detail above shell (dual)');
       return;
     }
     final index = state.index;
@@ -109,6 +163,24 @@ class WetlandNavigator {
         ? key.currentState!.context
         : context;
     AutoRouter.of(target).pop<T>(result);
+  }
+
+  /// 当前 tab 的 secondary 栈中**外壳页之上的详情层**（按栈序）。
+  ///
+  /// 与 `Wetland._detailEntriesOf` 同一约定：跳过 index 0 的外壳页与
+  /// `autoFilled` 的父级壳，只返回用户真正打开的详情。
+  List<RouteData> _secondaryDetailOf(WetlandScope scope, int index) {
+    final key = (index < scope.secondaryKeys.length)
+        ? scope.secondaryKeys[index]
+        : null;
+    final state = key?.currentState;
+    if (state == null) return const [];
+    final router = AutoRouter.of(state.context);
+    return [
+      for (var i = 1; i < router.stack.length; i++)
+        if (!router.stack[i].routeData.route.autoFilled)
+          router.stack[i].routeData,
+    ];
   }
 }
 
