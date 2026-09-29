@@ -31,23 +31,30 @@ jobs:
             build: flutter build linux --release
             # 构建输出（目录型产物稍后压成 tar.gz，避免丢失可执行权限位）。
             output: example/build/linux/x64/release/bundle
+            # Release 上最终的资产名（统一为 wetland-example-<平台>.<扩展名>）。
+            asset: wetland-example-linux.tar.gz
           - platform: windows
             os: windows-latest
             build: flutter build windows --release
             output: example/build/windows/x64/runner/Release
+            asset: wetland-example-windows.zip
           - platform: macos
             os: macos-latest
             build: flutter build macos --release
             output: example/build/macos/Build/Products/Release/wetland_example.app
+            asset: wetland-example-macos.tar.gz
           - platform: android
             os: ubuntu-latest
             build: flutter build apk --release
+            # Flutter 的 APK 输出名固定为 app-release.apk，故需重命名。
             output: example/build/app/outputs/flutter-apk/app-release.apk
+            asset: wetland-example-android.apk
           - platform: ios
             os: macos-latest
             # 无签名证书：--no-codesign 产出未签名 .app（无 .ipa）。
             build: flutter build ios --release --no-codesign
             output: example/build/ios/iphoneos/Runner.app
+            asset: wetland-example-ios.tar.gz
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -82,23 +89,29 @@ jobs:
         working-directory: .
         run: |
           out='${{ matrix.output }}'
-          tar -czf "wetland-example-${{ matrix.platform }}.tar.gz" \
-            -C "$(dirname "$out")" "$(basename "$out")"
+          tar -czf '${{ matrix.asset }}' -C "$(dirname "$out")" "$(basename "$out")"
 
       - name: 压缩打包（Windows）
         if: matrix.platform == 'windows'
         shell: pwsh
         working-directory: .
-        run: Compress-Archive -Path "${{ matrix.output }}/*" -DestinationPath "wetland-example-windows.zip"
+        run: Compress-Archive -Path "${{ matrix.output }}/*" -DestinationPath "${{ matrix.asset }}"
+
+      - name: 重命名单文件产物（Android）
+        # Flutter 的 APK 输出名固定为 app-release.apk；重命名为与其它平台
+        # 一致的 wetland-example-android.apk，使 Release 上资产命名统一。
+        if: matrix.platform == 'android'
+        shell: bash
+        working-directory: .
+        run: cp '${{ matrix.output }}' '${{ matrix.asset }}'
 
       - name: 上传产物
         uses: actions/upload-artifact@v7
         with:
           name: wetland-example-${{ matrix.platform }}
-          path: |
-            wetland-example-${{ matrix.platform }}.tar.gz
-            wetland-example-${{ matrix.platform }}.zip
-            example/build/app/outputs/flutter-apk/app-release.apk
+          # 各平台只上传自己那一个统一命名的资产；用 if-no-files-found 保证
+          # 命名/打包步骤出错时立即失败，而不是静默产出空 Release。
+          path: ${{ matrix.asset }}
           if-no-files-found: error
           retention-days: 7
 
