@@ -5,9 +5,12 @@
 name: Analyze
 
 on:
+  # 只在 main 上响应 push。其它分支与所有 PR 由 pull_request 触发 ——
+  # 同时开 push(branches: "**") 与 pull_request 会让「向本仓库分支推提交」
+  # 的 PR 触发两次（一次来自分支 push、一次来自 PR 事件），
+  # 例如 dependabot 的 PR 就会整轮跑两遍，白耗 runner。
   push:
-    # 任何分支（tag 推送交给 release.yml / publish.yml，见 branches 过滤）。
-    branches: ["**"]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -41,8 +44,14 @@ jobs:
         run: dart run build_runner build --delete-conflicting-outputs
 
       - name: 检查生成物是否与入库版本一致
-        # 生成物有差异 ⇒ 有人改了路由却没提交生成结果。
-        run: git diff --exit-code
+        # 只查**生成的路由文件**：router.gr.dart 已入库，若它与 router.dart 不一致，
+        # 说明有人改了路由却没提交生成结果。
+        #
+        # 刻意不写 `git diff --exit-code`（全仓库）：`flutter pub get` 会按当前 SDK
+        # 重写 example/pubspec.lock 的 sdks 约束（CI 的 Flutter 版本比本地新时，
+        # 例如 dart 3.12→3.13、flutter 3.32→3.47），那与「忘了提交生成物」无关，
+        # 却会让这个门槛在**每个** PR 上误报失败。实测确认过这一误报。
+        run: git diff --exit-code -- example/lib/router/router.gr.dart
 
       - name: 分析根包
         run: flutter analyze --fatal-infos

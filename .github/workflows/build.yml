@@ -18,8 +18,12 @@
 name: Build
 
 on:
+  # 只在 main 上响应 push。其它分支与所有 PR 由 pull_request 触发 ——
+  # 同时开 push(branches: "**") 与 pull_request 会让「向本仓库分支推提交」
+  # 的 PR 触发两次（一次来自分支 push、一次来自 PR 事件），
+  # 例如 dependabot 的 PR 就会整轮跑两遍，白耗 runner。
   push:
-    branches: ["**"]
+    branches: [main]
   pull_request:
   workflow_call:
   workflow_dispatch:
