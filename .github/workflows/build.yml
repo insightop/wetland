@@ -1,14 +1,14 @@
-# 阶段 3/5：构建。每次推送与所有 PR 都跑，并把五平台产物上传为 artifacts。
+# 阶段 3/5：构建五平台并上传 artifacts。
 #
 # ## 为什么是 workflow_call
 #
-# 本文件同时被三种入口使用：
-#   - 每次 push / PR（下方 `on.push` / `on.pull_request`）—— 验证五平台可构建；
-#   - release.yml 通过 `uses: ./.github/workflows/build.yml` 复用 —— 直接消费
-#     本次 run 产出的 artifacts 来创建 Release。
+# 本文件被两种入口复用，因此**不自行监听 push / PR**（否则每次推送会另外
+# 产生一条运行记录）：
+#   - `ci.yml` 调度它 —— 每次 push / PR 验证五平台可构建；
+#   - `release.yml` 复用它 —— 直接消费**同一次 run** 内的 artifacts 创建 Release。
 #
 # 选择「可复用 workflow」而不是让 release 用 workflow_run 去**跨 run**取产物：
-#   - 产物落在**同一次 run** 内，`download-artifact` 不需要 run-id 与 token；
+#   - 产物落在同一次 run 内，`download-artifact` 不需要 run-id 与 token；
 #   - 不会有「每个 commit 的 build 完成都触发一次 release」的问题；
 #   - workflow_run 也不提供 ref_type，只能拿 head_branch 名字反推是不是 tag。
 #
@@ -18,21 +18,14 @@
 name: Build
 
 on:
-  # 只在 main 上响应 push。其它分支与所有 PR 由 pull_request 触发 ——
-  # 同时开 push(branches: "**") 与 pull_request 会让「向本仓库分支推提交」
-  # 的 PR 触发两次（一次来自分支 push、一次来自 PR 事件），
-  # 例如 dependabot 的 PR 就会整轮跑两遍，白耗 runner。
-  push:
-    branches: [main]
-  pull_request:
+  # 只作为可复用 workflow：由 ci.yml 调度（日常构建）与 release.yml 复用（发版产物）。
+  # 不自行监听 push / PR，否则每次推送会另外产生一条运行记录。
   workflow_call:
   workflow_dispatch:
 
-concurrency:
-  # release.yml 调用时 github.workflow 为调用方的名字，因此不会与日常 build 互踢。
-  group: build-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
+# 刻意不声明 concurrency：本文件是**被调用**的 workflow，与调用方属于同一次 run，
+# 因此调用方（ci.yml）的 cancel-in-progress 已经覆盖它。在被调用方另设 group
+# 反而会引入「同名 group 互相取消」的不确定性。
 jobs:
   build:
     name: 构建 ${{ matrix.platform }}

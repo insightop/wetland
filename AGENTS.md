@@ -128,13 +128,16 @@ tag 会同时触发 `release.yml`（复用 build.yml 的五平台产物并创建
 
 ## CI/CD
 
-五个阶段拆成独立 workflow，与「明确发版才跑重活」的原则对应：
+五个阶段拆成独立文件，`ci.yml` 是**统一入口**：它调用 analyze / test / build 三个
+**可复用 workflow**，因此每次 push / PR 在 Actions 列表里只有**一条 `CI` 记录**，
+而阶段仍是独立 job、可单独重跑。
 
-| Workflow | 触发 | 职责 |
+| 文件 | 触发 | 职责 |
 |---|---|---|
-| `analyze.yml` | 每次 push / PR | `flutter analyze --fatal-infos`（根 + example）；并校验 example 生成物已提交 |
-| `test.yml` | 每次 push / PR | 根包与 example 的 `flutter test` |
-| `build.yml` | 每次 push / PR，**以及被 release 复用** | 五平台构建并上传 artifacts |
+| `ci.yml` | 每次 push（仅 main）/ PR | 统一入口：调用下面三个阶段 |
+| `analyze.yml` | 由 ci 调用（`workflow_call`） | `flutter analyze --fatal-infos`（根 + example）；并校验 example 生成物已提交 |
+| `test.yml` | 由 ci 调用（`workflow_call`） | 根包与 example 的 `flutter test` |
+| `build.yml` | 由 ci 调用，**也**由 release 复用 | 五平台构建并上传 artifacts |
 | `release.yml` | **仅 `v*` tag** | `uses: ./build.yml` 复用构建，消费同 run 内的 artifacts 创建 Release |
 | `publish.yml` | **仅 `v*` tag** | 发布到 pub.dev（官方可复用 workflow + OIDC，无长期密钥） |
 
@@ -145,6 +148,10 @@ tag 会同时触发 `release.yml`（复用 build.yml 的五平台产物并创建
   后者拿不到 `ref_type`（要自行反推是不是 tag），且每个 commit 的 build 完成都会触发它。
 - **`publish.yml` 必须保持 `on: push: tags`**。pub.dev 只接受 tag 推送触发的运行，这是硬约束；
   它发布的是源码包，不需要平台产物，因此与 build 解耦。
+
+另外两点约定：`push` 只在 `main`（其它分支与 PR 走 `pull_request`，否则向本仓库分支推提交的
+PR 会整轮跑两遍）；**concurrency 只在 `ci.yml` 声明**——被调用的 workflow 与调用方同属一次 run，
+在被调用方另设 group 会引入「同名 group 互相取消」的不确定性。
 
 `dependabot.yml` 每周检查三类依赖并自动开 PR：根包 pub、example pub、github-actions。
 

@@ -15,10 +15,10 @@ updates:
     commit-message:
       prefix: "chore(deps)"
     groups:
-      # 把同一生态的常规更新合并成一个 PR，减少审查与 CI 负担。
+      # 全部更新（含 major）合并成一个 PR，减少审查与 CI 负担。
+      # 大版本不做约束：PR 里会跑 CI，也可自行拉取验证。
       pub-root:
         patterns: ["*"]
-        update-types: ["minor", "patch"]
 
   # example 依赖（独立于根包）
   - package-ecosystem: pub
@@ -31,7 +31,6 @@ updates:
     groups:
       pub-example:
         patterns: ["*"]
-        update-types: ["minor", "patch"]
 
   # GitHub Actions 版本（含本仓库引用的上游 action）
   - package-ecosystem: github-actions

@@ -15,7 +15,7 @@
 #      仓库:      insightop/wetland
 #      tag 模式:  v{{version}}
 # 该模式必须与下面的 `on.push.tags` 完全一致，否则发布会被拒绝。
-name: Publish to pub.dev
+name: Publish
 
 on:
   push:

@@ -1,0 +1,43 @@
+# CI 统一入口：每次 push / PR 只产生**一条**运行记录，内部调度各阶段。
+#
+# 各阶段（analyze / test / build）本身是**可复用 workflow**（`on: workflow_call`），
+# 由本文件统一调用。好处：
+#   - Actions 列表里每次 push 只有一条 `CI` 记录，而不是三条；
+#   - 阶段仍是独立 job，可单独重跑；
+#   - `build.yml` 同时被 release.yml 复用，五平台构建逻辑只有一份。
+#
+# 触发面刻意收窄：`push` 只在 main，其它分支与所有 PR 走 `pull_request`。
+# 若同时开 `push: branches: ["**"]`，向本仓库分支推提交的 PR（如 dependabot 的）
+# 会同时命中两个事件而整轮跑两遍，白耗 runner。
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  # 同一 PR / ref 的新推送取消旧运行，避免排队浪费。
+  # 被调用的 analyze / test / build 与本次 run 同属一个整体，因此也一并被取消，
+  # 无需（也不应在）各阶段内部再声明 concurrency。
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+# 可复用 workflow 的权限由调用方决定，这里显式收敛为只读。
+# release.yml 另需 contents: write，已在它自己的 job 上声明。
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: 静态分析
+    uses: ./.github/workflows/analyze.yml
+
+  test:
+    name: 测试
+    uses: ./.github/workflows/test.yml
+
+  build:
+    name: 构建
+    uses: ./.github/workflows/build.yml

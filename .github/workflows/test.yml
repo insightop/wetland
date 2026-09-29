@@ -1,19 +1,11 @@
-# 阶段 2/5：测试。每次推送与所有 PR 都跑。
+# 阶段 2/5：测试。由 ci.yml 调度（也可单独复用）。
+#
+# 本文件是**可复用 workflow**：不自行监听 push / PR，只由 ci.yml 调用。
+# 这样每次 push 只产生一条 CI 运行记录，而阶段仍是独立 job、可单独重跑。
 name: Test
 
 on:
-  # 只在 main 上响应 push。其它分支与所有 PR 由 pull_request 触发 ——
-  # 同时开 push(branches: "**") 与 pull_request 会让「向本仓库分支推提交」
-  # 的 PR 触发两次（一次来自分支 push、一次来自 PR 事件），
-  # 例如 dependabot 的 PR 就会整轮跑两遍，白耗 runner。
-  push:
-    branches: [main]
-  pull_request:
-  workflow_dispatch:
-
-concurrency:
-  group: test-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  workflow_call:
 
 jobs:
   test:
