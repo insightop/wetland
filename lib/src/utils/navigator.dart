@@ -20,8 +20,9 @@ extension WetlandNavigationExtension on BuildContext {
 /// 面向 wetland 的导航助手。
 ///
 /// 根据调用来源与当前布局模式，把路由推入正确的导航栈：
-/// - 横屏下推入当前主 tab 的右侧详情栈（secondary）；
-/// - 竖屏下推入主内容栈（primary）。
+/// - 单栏（竖屏）：推入**根 navigator**，成为覆盖全屏（含底部导航）的真实路由，
+///   因此进入/退出都是原生 push/pop 过渡。详见 `RootDetailStack`。
+/// - 双栏（横屏）：推入当前主 tab 的 secondary 详情栈，右侧并排展示。
 class WetlandNavigator {
   final BuildContext context;
 
@@ -29,17 +30,34 @@ class WetlandNavigator {
 
   Future<T?> push<T extends Object?>(PageRouteInfo<dynamic> route) async {
     final scope = WetlandScope.maybeOf(context);
-    // 不在 Wetland 子树内（无 scope，必然也无 bloc），直接推入 primary。
+    // 不在 Wetland 子树内（无 scope，必然也无 bloc），直接推入最近 router。
     if (scope == null) {
-      Log.d('Push [${route.routeName}] to [PrimaryBody]');
+      Log.d('Push [${route.routeName}] to [RootNavigator] (outside scope)');
       return await AutoRouter.of(context).push<T>(route);
     }
-    final index = context.read<WetlandBloc>().state.index;
+    final state = context.read<WetlandBloc>().state;
+    final index = state.index;
     final key = (index < scope.secondaryKeys.length)
         ? scope.secondaryKeys[index]
         : null;
+
+    // 单栏（竖屏）：详情推入根 navigator，成为全屏路由（覆盖底部导航），
+    // 进出均为原生 push/pop。判定用 mode 而非「key 是否可用」：嵌套 navigator
+    // 在单栏下依然挂载，只看 key 会误判为双栏。
+    if (state.mode == WetlandMode.single) {
+      final rootDetails = scope.rootDetails;
+      if (rootDetails != null) {
+        final fromDetail = rootDetails.isInsideRootDetail(context);
+        Log.d('Push [${route.routeName}] to [RootDetailStack]'
+            ' (single, ${fromDetail ? 'drill-down' : 'replace'})');
+        return await rootDetails.push<T>(context, route, replace: !fromDetail);
+      }
+      Log.d('Push [${route.routeName}] to [RootNavigator] (single, no host)');
+      return await AutoRouter.of(context).push<T>(route);
+    }
+
     if (key == null || key.currentState == null) {
-      // 竖屏（secondary 未挂载）或 key 无效：推入 primary。
+      // 双栏但 secondary 尚未就绪：退回最近 router。
       Log.d('Push [${route.routeName}] to [PrimaryBody]');
       return await AutoRouter.of(context).push<T>(route);
     }
@@ -72,7 +90,18 @@ class WetlandNavigator {
       context.router.pop<T>(result);
       return;
     }
-    final index = context.read<WetlandBloc>().state.index;
+    final state = context.read<WetlandBloc>().state;
+    // 单栏：详情在根 navigator 上，pop 根栈顶部。
+    if (state.mode == WetlandMode.single) {
+      final rootDetails = scope.rootDetails;
+      if (rootDetails != null && rootDetails.hasDetail) {
+        rootDetails.pop<T>(result);
+        return;
+      }
+      context.router.pop<T>(result);
+      return;
+    }
+    final index = state.index;
     final key = (index < scope.secondaryKeys.length)
         ? scope.secondaryKeys[index]
         : null;
@@ -84,5 +113,6 @@ class WetlandNavigator {
 }
 
 //! 重要！！ 堆栈push原则！！
-//! 只要secondaryBody活跃，就push到当前tab对应的secondaryBody，否则push到primaryBody
+//! 单栏（竖屏）：详情推入根 navigator，全屏覆盖并走原生 push/pop；
+//! 双栏（横屏）：详情推入当前 tab 的 secondaryBody，右侧并排展示。
 //! 可以同时适配平板和手机的布局
