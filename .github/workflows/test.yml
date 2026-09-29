@@ -1,0 +1,38 @@
+# 阶段 2/5：测试。每次推送与所有 PR 都跑。
+name: Test
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: test-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: 测试
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v7
+
+      - name: 安装 Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: 拉取依赖
+        run: |
+          flutter pub get
+          cd example && flutter pub get
+
+      - name: 测试库
+        run: flutter test
+
+      - name: 测试 example
+        working-directory: example
+        run: flutter test

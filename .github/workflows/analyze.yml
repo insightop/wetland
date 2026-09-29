@@ -1,0 +1,52 @@
+# 阶段 1/5：静态分析。每次推送与所有 PR 都跑。
+#
+# 拆成独立 workflow 的理由：失败信息直接对应职责，且各阶段可独立重跑。
+# 本阶段只保证「代码可分析、生成物已提交」，不跑测试、不构建。
+name: Analyze
+
+on:
+  push:
+    # 任何分支（tag 推送交给 release.yml / publish.yml，见 branches 过滤）。
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+# 同一 ref 的新推送取消旧运行，避免排队浪费。
+concurrency:
+  group: analyze-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: 静态分析
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v7
+
+      - name: 安装 Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: 拉取依赖
+        run: |
+          flutter pub get
+          cd example && flutter pub get
+
+      - name: 生成 example 路由代码
+        # router.gr.dart 已入库；重新生成可确保它与 router.dart 保持一致。
+        working-directory: example
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: 检查生成物是否与入库版本一致
+        # 生成物有差异 ⇒ 有人改了路由却没提交生成结果。
+        run: git diff --exit-code
+
+      - name: 分析根包
+        run: flutter analyze --fatal-infos
+
+      - name: 分析 example
+        working-directory: example
+        run: flutter analyze --fatal-infos

@@ -1,137 +1,39 @@
-# 发布：推送 vX.Y.Z tag 时构建五平台产物并上传到 GitHub Release。
+# 阶段 4/5：发布产物。仅在明确发版（推送 vX.Y.Z tag）时运行。
 #
-# 与 publish.yml 的分工：
-# - 本文件负责「产物」（linux/macos/windows/android/ios），挂在 GitHub Release 上。
-# - publish.yml 负责把包发到 pub.dev（pub.dev 只接受 tag 触发的 workflow）。
+# 它**复用 build.yml** 而不是自己重复一遍五平台构建：
+#   - 产物落在同一次 run 内，下面的 download-artifact 无需 run-id / token；
+#   - 构建逻辑只有一份，改平台矩阵时不会出现「日常构建改了、发布没改」的偏差。
 #
-# 关于签名：仓库未配置签名证书（iOS/macOS）与 keystore（Android），因此产物是
-# **未签名**的，仅用于验证「该平台确实能构建」并提供可下载的测试包。
-# iOS 无签名产物无法装到真机；Android 用 debug 签名（见 example 的 build.gradle）。
-# 将来要分发正式产物，再在 Secrets 里补证书并接入对应步骤。
+# 关于 GitHub Release 与 pub.dev 的分工：本文件只产出「平台产物」；
+# 发布到 pub.dev 由 publish.yml 负责（pub.dev 只接受 tag 触发的运行，
+# 且发布的是源码包，不需要这些平台产物）。
 name: Release
 
 on:
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
-  # 允许手动触发：只构建五平台并上传 artifact，**不创建 Release**（见 release
-  # job 的 if 守卫）。用途是在不切 tag 的前提下验证多平台构建与资产命名 ——
-  # 尤其是不要为了测试而推一个真 tag：publish.yml 的 tag 模式与本文件相同，
-  # 推 tag 会**同时触发向 pub.dev 的发布**，而那是不可撤回的。
-  workflow_dispatch:
 
 permissions:
   # 创建 Release 并上传产物需要写权限。
   contents: write
 
 jobs:
+  # 复用阶段 3 的五平台构建。产物名称与 build.yml 中的 asset 一致。
   build:
-    name: 构建 ${{ matrix.platform }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: linux
-            os: ubuntu-latest
-            build: flutter build linux --release
-            # 构建输出（目录型产物稍后压成 tar.gz，避免丢失可执行权限位）。
-            output: example/build/linux/x64/release/bundle
-            # Release 上最终的资产名（统一为 wetland-example-<平台>.<扩展名>）。
-            asset: wetland-example-linux.tar.gz
-          - platform: windows
-            os: windows-latest
-            build: flutter build windows --release
-            output: example/build/windows/x64/runner/Release
-            asset: wetland-example-windows.zip
-          - platform: macos
-            os: macos-latest
-            build: flutter build macos --release
-            output: example/build/macos/Build/Products/Release/wetland_example.app
-            asset: wetland-example-macos.tar.gz
-          - platform: android
-            os: ubuntu-latest
-            build: flutter build apk --release
-            # Flutter 的 APK 输出名固定为 app-release.apk，故需重命名。
-            output: example/build/app/outputs/flutter-apk/app-release.apk
-            asset: wetland-example-android.apk
-          - platform: ios
-            os: macos-latest
-            # 无签名证书：--no-codesign 产出未签名 .app（无 .ipa）。
-            build: flutter build ios --release --no-codesign
-            output: example/build/ios/iphoneos/Runner.app
-            asset: wetland-example-ios.tar.gz
-    runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        working-directory: example
-    steps:
-      - name: 检出代码
-        uses: actions/checkout@v7
-
-      - name: 安装 Flutter SDK
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-
-      - name: 拉取依赖
-        run: flutter pub get
-
-      - name: Linux 系统依赖
-        if: matrix.platform == 'linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ninja-build libgtk-3-dev
-
-      - name: 构建
-        run: ${{ matrix.build }}
-
-      - name: 压缩打包（桌面与 iOS 的目录型产物）
-        # 目录型产物必须压成单文件：artifact 上传不保留可执行权限位，
-        # 且 macOS 的 .app 依赖目录结构与符号链接。
-        if: matrix.platform != 'android' && matrix.platform != 'windows'
-        shell: bash
-        working-directory: .
-        run: |
-          out='${{ matrix.output }}'
-          tar -czf '${{ matrix.asset }}' -C "$(dirname "$out")" "$(basename "$out")"
-
-      - name: 压缩打包（Windows）
-        if: matrix.platform == 'windows'
-        shell: pwsh
-        working-directory: .
-        run: Compress-Archive -Path "${{ matrix.output }}/*" -DestinationPath "${{ matrix.asset }}"
-
-      - name: 重命名单文件产物（Android）
-        # Flutter 的 APK 输出名固定为 app-release.apk；重命名为与其它平台
-        # 一致的 wetland-example-android.apk，使 Release 上资产命名统一。
-        if: matrix.platform == 'android'
-        shell: bash
-        working-directory: .
-        run: cp '${{ matrix.output }}' '${{ matrix.asset }}'
-
-      - name: 上传产物
-        uses: actions/upload-artifact@v7
-        with:
-          name: wetland-example-${{ matrix.platform }}
-          # 各平台只上传自己那一个统一命名的资产；用 if-no-files-found 保证
-          # 命名/打包步骤出错时立即失败，而不是静默产出空 Release。
-          path: ${{ matrix.asset }}
-          if-no-files-found: error
-          retention-days: 7
+    name: 构建五平台
+    uses: ./.github/workflows/build.yml
 
   release:
     name: 创建 Release
     needs: build
-    # 仅在 tag 推送时创建 Release。手动触发只跑构建+artifact 上传，
-    # 这样验证流程不会产生指向任意提交的 Release。
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: 下载全部产物
         uses: actions/download-artifact@v8
         with:
           path: artifacts
+          # 各平台 artifact 合入同一目录，便于一次性作为 Release 资产上传。
           merge-multiple: true
 
       - name: 列出产物（便于排查）
