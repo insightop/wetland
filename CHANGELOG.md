@@ -1,3 +1,51 @@
+## 0.2.1
+
+A navigation-safety release. Several defects could crash or silently break a
+caller's app with no exception to point at the cause; they are fixed here.
+
+### Breaking
+
+- **`context.wetland.pop()` no longer pops the destination.** It now only pops a
+  detail the library owns, and is a **no-op** when no detail is open. Previously,
+  calling it on a destination's root page in single-column mode popped the whole
+  `Wetland` off the navigator (blank screen, no exception), and in dual-column
+  mode it popped the destination's shell page, after which no detail could ever
+  become visible. If you were relying on `pop()` to exit the app, handle that in
+  your host app instead. Use `canPop` / `maybePop()` to guard a back button.
+- **`await context.wetland.push<T>(route)` now returns the detail's pop result in
+  dual-column mode too.** Previously the dual-column "replace" path completed
+  immediately with `null` even though the detail was on screen, so the same call
+  behaved differently depending on screen orientation. It now completes when the
+  detail is popped, with its result, in both modes.
+
+### Fixed
+
+- `Wetland` with a single destination no longer crashes in single-column mode
+  (Flutter's `BottomNavigationBar` requires at least two items); the bottom bar is
+  simply not built when there is nothing to switch between.
+- `Wetland(destinations: [])` now fails an assertion at the construction site
+  instead of throwing `RangeError` during layout.
+- The layout mode is now derived from the actual layout rather than from whichever
+  slot builder happened to run. This fixes an app that starts wide never having its
+  system UI (status bar / navigation bar) applied.
+
+### Added
+
+- `WetlandNavigator.canPop` and `WetlandNavigator.maybePop()` for safe back-button
+  handling.
+- `hasRequiredShellPage` — a public predicate to validate the empty-path shell-page
+  convention each destination's nested routes must follow.
+- A real README: install, quick start (including the required
+  `AutoRoute(path: '', ...)` shell entry), full API tables, single- vs dual-column
+  behaviour, and known limitations.
+
+### Known limitation (documented, not fixed)
+
+- `primaryBody` does not support details. With no `destinations` there is no
+  secondary region and therefore no nested navigator to host one; details pushed in
+  this mode are never visible. Use `destinations` if you need details. Hosting
+  details in `primaryBody` mode was never implemented and remains a future feature.
+
 ## 0.2.0
 
 - **Breaking:** In single-column mode, a detail page is now a genuine full-screen
