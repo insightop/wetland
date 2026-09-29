@@ -31,13 +31,13 @@ permissions:
 
 jobs:
   analyze:
-    name: 静态分析
+    name: Analyze
     uses: ./.github/workflows/analyze.yml
 
   test:
-    name: 测试
+    name: Test
     uses: ./.github/workflows/test.yml
 
   build:
-    name: 构建
+    name: Build
     uses: ./.github/workflows/build.yml

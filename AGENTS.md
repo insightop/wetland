@@ -102,7 +102,9 @@ openspec validate <change> --strict
 ```
 
 **语言**：代码注释与 dartdoc 用**中文**（含实测数据与「为什么」）；commit message 用**中文**；
-README 与 CHANGELOG 用**英文**（面向 pub.dev 使用者）。这是现状，改动时保持一致。
+README 与 CHANGELOG 用**英文**（面向 pub.dev 使用者）；**workflow 里会显示在 Actions UI 的
+`name:`（workflow / job / step）用英文** —— 它们是界面文字而非注释，注释本身仍用中文。
+改动时保持一致。
 
 **测试分层**：库测试 26 条在 `test/`；**布局、过渡、迁移这类行为主要由 `example/test/` 的 40 条
 端到端 widget 测试兜底**，其中不少是帧敏感的（逐帧采样宽度/位置）。改布局或迁移时，

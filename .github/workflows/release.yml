@@ -21,25 +21,25 @@ permissions:
 jobs:
   # 复用阶段 3 的五平台构建。产物名称与 build.yml 中的 asset 一致。
   build:
-    name: 构建五平台
+    name: Build (5 platforms)
     uses: ./.github/workflows/build.yml
 
   release:
-    name: 创建 Release
+    name: Create Release
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: 下载全部产物
+      - name: Download all artifacts
         uses: actions/download-artifact@v8
         with:
           path: artifacts
           # 各平台 artifact 合入同一目录，便于一次性作为 Release 资产上传。
           merge-multiple: true
 
-      - name: 列出产物（便于排查）
+      - name: List artifacts
         run: ls -lhR artifacts
 
-      - name: 创建 Release 并附加产物
+      - name: Create Release with assets
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}

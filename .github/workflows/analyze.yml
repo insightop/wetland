@@ -9,29 +9,29 @@ on:
 
 jobs:
   analyze:
-    name: 静态分析
+    name: Analyze
     runs-on: ubuntu-latest
     steps:
-      - name: 检出代码
+      - name: Checkout
         uses: actions/checkout@v7
 
-      - name: 安装 Flutter SDK
+      - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
 
-      - name: 拉取依赖
+      - name: Get dependencies
         run: |
           flutter pub get
           cd example && flutter pub get
 
-      - name: 生成 example 路由代码
+      - name: Generate example routes
         # router.gr.dart 已入库；重新生成可确保它与 router.dart 保持一致。
         working-directory: example
         run: dart run build_runner build --delete-conflicting-outputs
 
-      - name: 检查生成物是否与入库版本一致
+      - name: Verify generated routes are committed
         # 只查**生成的路由文件**：router.gr.dart 已入库，若它与 router.dart 不一致，
         # 说明有人改了路由却没提交生成结果。
         #
@@ -41,9 +41,9 @@ jobs:
         # 却会让这个门槛在**每个** PR 上误报失败。实测确认过这一误报。
         run: git diff --exit-code -- example/lib/router/router.gr.dart
 
-      - name: 分析根包
+      - name: Analyze root package
         run: flutter analyze --fatal-infos
 
-      - name: 分析 example
+      - name: Analyze example
         working-directory: example
         run: flutter analyze --fatal-infos

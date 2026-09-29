@@ -27,7 +27,7 @@ on:
 
 jobs:
   publish:
-    name: 发布到 pub.dev
+    name: Publish
     permissions:
       # 申请 OIDC token 所必需，用于向 pub.dev 证明身份。
       id-token: write

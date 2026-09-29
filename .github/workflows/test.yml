@@ -9,26 +9,26 @@ on:
 
 jobs:
   test:
-    name: 测试
+    name: Test
     runs-on: ubuntu-latest
     steps:
-      - name: 检出代码
+      - name: Checkout
         uses: actions/checkout@v7
 
-      - name: 安装 Flutter SDK
+      - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
 
-      - name: 拉取依赖
+      - name: Get dependencies
         run: |
           flutter pub get
           cd example && flutter pub get
 
-      - name: 测试库
+      - name: Test library
         run: flutter test
 
-      - name: 测试 example
+      - name: Test example
         working-directory: example
         run: flutter test
