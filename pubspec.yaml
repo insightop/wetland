@@ -15,7 +15,7 @@ dependencies:
 
   # 自适应
   # flutter_adaptive_scaffold: ^0.3.1 # discontinued
-  custom_adaptive_scaffold: ^5.3.0 # community-edition of flutter_adaptive_scaffold
+  custom_adaptive_scaffold: ">=5.3.0 <7.0.0" # community-edition of flutter_adaptive_scaffold
   # 路由管理
   auto_route: ^11.1.0
   # 状态管理
