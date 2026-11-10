@@ -12,6 +12,7 @@ dependencies:
   wetland:
     path: ../
 
+  material_ui: ^1.11.0
   auto_route: ^11.2.0
   skeletonizer: ^3.0.0
 

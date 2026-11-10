@@ -4,20 +4,25 @@ description: Adaptive navigation framework for Flutter. Three-column layout with
 homepage: https://github.com/insightop/wetland
 repository: https://github.com/insightop/wetland
 issue_tracker: https://github.com/insightop/wetland/issues
-version: 0.2.1
+version: 0.3.0
 
 environment:
-  sdk: ">=3.10.0 <4.0.0"
+  # custom_adaptive_scaffold 6.x 要求 Dart 3.13 / Flutter 3.47，下限随之抬高。
+  sdk: ">=3.13.0 <4.0.0"
+  flutter: ">=3.47.0"
 
 dependencies:
   flutter:
     sdk: flutter
 
+  # Material 设计系统（Flutter 3.47 起从 SDK 拆出的官方包）
+  material_ui: ^1.11.0
+
   # 自适应
   # flutter_adaptive_scaffold: ^0.3.1 # discontinued
-  custom_adaptive_scaffold: ^5.3.0 # community-edition of flutter_adaptive_scaffold
+  custom_adaptive_scaffold: ^6.0.0 # community-edition of flutter_adaptive_scaffold
   # 路由管理
-  auto_route: ^11.1.0
+  auto_route: ^11.2.0
   # 状态管理
   flutter_bloc: ^9.0.0
   # 代码生成

@@ -68,6 +68,13 @@
 **单栏详情绕过 auto_route 的 `NavigationHistory`**，因此 Web URL / 深链不同步。
 移动端与桌面端不受影响。这是已知取舍，见 CHANGELOG 的 Known limitation。
 
+**库内统一用 `material_ui`，不要混入 SDK 的 `flutter/material`。**
+Flutter 3.47 把 Material 拆成官方包 `material_ui`；两边**同名但不同类型**（`Theme`、
+`NavigationRailLabelType` 等）不能互换。本库所有 Material 控件与 `Theme.of` 都来自
+`material_ui`，导航栏用 `custom_adaptive_scaffold` 6.x 的原生 rail（Material 3 默认样式）。
+宿主 app 也必须是 `material_ui` 应用：旧式 `MaterialApp` 不提供 `material_ui` 的
+`MaterialLocalizations`，双栏布局会直接抛断言（实测）。auto_route 需 ≥11.2.0。
+
 ---
 
 ## 代码地图

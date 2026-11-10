@@ -11,10 +11,15 @@ Built on [`auto_route`](https://pub.dev/packages/auto_route) and
 
 ## Install
 
+Requires Flutter 3.47+ (Dart 3.13+), and your app must use
+[`material_ui`](https://pub.dev/packages/material_ui) — Flutter 3.47 moved Material out of the
+SDK. Run `dart fix --apply --code=migrate_design_widgets` once to migrate your imports.
+
 ```yaml
 dependencies:
-  wetland: ^0.2.1
-  auto_route: ^11.1.0
+  wetland: ^0.3.0
+  material_ui: ^1.11.0
+  auto_route: ^11.2.0
 
 dev_dependencies:
   auto_route_generator: ^10.0.0
