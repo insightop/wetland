@@ -11,7 +11,7 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 
 import 'package:auto_route/auto_route.dart' as _i9;
-import 'package:flutter/material.dart' as _i10;
+import 'package:material_ui/material_ui.dart' as _i10;
 import 'package:wetland_example/pages/contacts_page.dart' as _i1;
 import 'package:wetland_example/pages/detail_page.dart' as _i2;
 import 'package:wetland_example/pages/home_page.dart' as _i3;

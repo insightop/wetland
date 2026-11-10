@@ -1,3 +1,27 @@
+## 0.3.0
+
+Wetland now targets the Material package split introduced in Flutter 3.47: the library is built
+on `material_ui` and on `custom_adaptive_scaffold` 6.x.
+
+### Breaking
+
+- **Requires Flutter 3.47.0+ / Dart 3.13.0+** (previously Dart 3.10).
+- **The host app must import `package:material_ui/material_ui.dart`** instead of
+  `package:flutter/material.dart`. Wetland's widgets are `material_ui` widgets; a legacy
+  `MaterialApp` does not provide their `MaterialLocalizations`, so the navigation rail asserts at
+  runtime in a dual-column layout. Migrating is one data-driven fix:
+  `dart fix --apply --code=migrate_design_widgets` (legacy third-party subtrees can be bridged
+  with `MaterialUiCompatibilityBridge`).
+- `auto_route` must be 11.2.0 or newer — the release that itself migrated to `material_ui`.
+- The navigation rail renders through `custom_adaptive_scaffold` 6.x again and follows Material 3
+  defaults from the app theme (selection indicator + `onSecondaryContainer` icon). The previous
+  hard-coded M2 colour and bold-label overrides are gone; labels are still always shown.
+
+### Changed
+
+- `custom_adaptive_scaffold` bumped from 5.3.0 to 6.0.0, `material_ui` added as a direct
+  dependency, and `auto_route` raised to 11.2.0.
+
 ## 0.2.1
 
 A navigation-safety release. Several defects could crash or silently break a

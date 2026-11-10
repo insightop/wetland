@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// 描述一个主 tab 的配置：标签、图标与对应的主内容页。
 ///

@@ -1,7 +1,7 @@
 import "dart:async";
 
 import "package:auto_route/auto_route.dart";
-import "package:flutter/material.dart";
+import "package:material_ui/material_ui.dart";
 import "package:flutter_logcat/flutter_logcat.dart";
 
 /// 单栏（竖屏）下承载「全屏详情」的宿主。

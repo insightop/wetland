@@ -1,6 +1,7 @@
-import "package:flutter/material.dart" hide NavigationDestination;
-import "package:custom_adaptive_scaffold/custom_adaptive_scaffold.dart"
-    hide NavigationRailTheme, NavigationRailThemeData;
+// 6.x 的导航栏由 `material_ui` 渲染，直接使用该包导出的 Material 与导航类型，
+// 避免同时混入 SDK 的 `flutter/material`（两套同名类型不能混用）。
+import "package:custom_adaptive_scaffold/custom_adaptive_scaffold.dart";
+import "package:custom_adaptive_scaffold/material_ui.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
 import "../blocs/wetland_bloc.dart";
 import "../utils/destination.dart";
@@ -9,6 +10,9 @@ import "../utils/destination.dart";
 ///
 /// 根据 [destinations] 渲染导航项，点击时通过 [WetlandBloc] 切换当前主 tab。
 class PrimaryNavigation extends StatelessWidget {
+  /// 主导航栏的固定宽度。
+  static const double _railWidth = 74;
+
   /// 主导航的 tab 配置列表。
   final List<TabDestination> destinations;
 
@@ -27,23 +31,6 @@ class PrimaryNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 导航栏主题（Material 3：通过 NavigationRailTheme 配置选中/未选中样式）
-    final selectedIconTheme = Theme.of(context).iconTheme.copyWith(
-      color: Theme.of(context).colorScheme.primary, // 使用主题中的主要颜色
-    );
-    final unselectedIconTheme = Theme.of(context).iconTheme.copyWith(
-      color: Theme.of(context).colorScheme.onSurface, // 使用主题中的次要颜色
-    );
-    final selectedLabelTextStyle = Theme.of(context).textTheme.bodySmall!
-        .copyWith(
-          color: Theme.of(context).colorScheme.primary, // 选中的标签颜色
-          fontWeight: FontWeight.bold, // 可选，设置字体加粗
-        );
-    final unSelectedLabelTextStyle = Theme.of(context).textTheme.bodySmall!
-        .copyWith(
-          color: Theme.of(context).colorScheme.onSurface, // 未选中的标签颜色
-        );
-
     return BlocBuilder<WetlandBloc, WetlandState>(
       builder: (context, state) {
         return Container(
@@ -53,38 +40,30 @@ class PrimaryNavigation extends StatelessWidget {
               right: BorderSide(color: Colors.grey.shade300, width: 0.1),
             ),
           ),
-          child: NavigationRailTheme(
-            data: NavigationRailThemeData(
-              selectedIconTheme: selectedIconTheme,
-              unselectedIconTheme: unselectedIconTheme,
-              selectedLabelTextStyle: selectedLabelTextStyle,
-              unselectedLabelTextStyle: unSelectedLabelTextStyle,
-            ),
-            child: AdaptiveScaffold.standardNavigationRail(
-              // backgroundColor:
-              //     Theme.of(context).colorScheme.surface.withAlpha(250),
-              leading: leading,
-              trailing: trailing,
-              padding: EdgeInsets.zero,
-              width: 74, //74
-              labelType: NavigationRailLabelType.all, // 标题显示方式
-              destinations: destinations
-                  .map(
-                    (e) => NavigationDestination(
-                      label: e.label,
-                      icon: e.icon,
-                      selectedIcon: e.selectedIcon,
-                    ),
-                  )
-                  .toList(),
-              selectedIndex: state.index < destinations.length
-                  ? state.index
-                  : destinations.isEmpty
-                      ? null
-                      : destinations.length - 1,
-              onDestinationSelected: (e) =>
-                  context.read<WetlandBloc>().add(WetlandEvent.setIndex(e)),
-            ),
+          // 选中态样式沿用 Material 3 默认值（指示器 + onSecondaryContainer 图标），
+          // 由宿主 app 的 Theme 驱动，不再手写 M2 的 selected/unselected 覆盖。
+          child: AdaptiveScaffold.standardNavigationRail(
+            leading: leading,
+            trailing: trailing,
+            padding: EdgeInsets.zero,
+            width: _railWidth,
+            labelType: NavigationRailLabelType.all, // 标题显示方式
+            destinations: destinations
+                .map(
+                  (e) => NavigationDestination(
+                    label: e.label,
+                    icon: e.icon,
+                    selectedIcon: e.selectedIcon,
+                  ),
+                )
+                .toList(),
+            selectedIndex: state.index < destinations.length
+                ? state.index
+                : destinations.isEmpty
+                    ? null
+                    : destinations.length - 1,
+            onDestinationSelected: (e) =>
+                context.read<WetlandBloc>().add(WetlandEvent.setIndex(e)),
           ),
         );
       },

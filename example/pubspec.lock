@@ -189,10 +189,10 @@ packages:
     dependency: transitive
     description:
       name: custom_adaptive_scaffold
-      sha256: bb771a134ce9c243def19d689f43c987305d67870c6284bae13407ccc3734c96
+      sha256: "32d2fd65e140c9cb6292ff80eb3e0e64e6c7f2f3bd296520b3781c9434482937"
       url: "https://pub.dev"
     source: hosted
-    version: "5.3.0"
+    version: "6.0.0"
   dart_style:
     dependency: transitive
     description:
@@ -409,13 +409,13 @@ packages:
     source: hosted
     version: "0.13.0"
   material_ui:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: material_ui
-      sha256: "32d98f11cf5942a095a8c3e01b03e4de3b17941437713dcf36b1088fb62e23d2"
+      sha256: "474c135fd46b56ff1d35ca982155e8863d28fbc6464d1192acf4ee53a738680e"
       url: "https://pub.dev"
     source: hosted
-    version: "1.5.0"
+    version: "1.11.0"
   meta:
     dependency: transitive
     description:
@@ -643,7 +643,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.2.1"
+    version: "0.3.0"
   xxh3:
     dependency: transitive
     description:
@@ -661,5 +661,5 @@ packages:
     source: hosted
     version: "3.1.4"
 sdks:
-  dart: ">=3.12.0 <4.0.0"
-  flutter: ">=3.32.0"
+  dart: ">=3.13.0 <4.0.0"
+  flutter: ">=3.47.0"

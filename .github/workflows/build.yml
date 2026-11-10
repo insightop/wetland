@@ -68,6 +68,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Set up JDK
+        # runner 默认 JDK 随镜像升级（2026-11 实测为 25），而 example 的 Gradle
+        # 8.14 最高只支持 Java 24，构建会在语义分析阶段直接失败。这里固定 JDK 17
+        # （AGP 8.11 支持的 LTS），让 android 构建不再随 runner 镜像漂移。
+        if: matrix.platform == 'android'
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
