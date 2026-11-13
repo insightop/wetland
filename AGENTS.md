@@ -164,6 +164,11 @@ PR 会整轮跑两遍）；**concurrency 只在 `ci.yml` 声明**——被调用
 
 `dependabot.yml` 每周检查三类依赖并自动开 PR：根包 pub、example pub、github-actions。
 
+**Android 工具链跟 Flutter stable 模板走**：example 现在是 Gradle 9.5.0 / AGP 9.3.1 /
+Kotlin 2.4.20（Kotlin DSL），CI 固定 JDK 17。Flutter 3.50 起 Gradle <9.3.1、AGP <9.1.1、
+Kotlin <2.4.10 会在构建脚本阶段**直接报错**，所以每次升 Flutter 后按 `flutter create`
+生成的模板核对 `example/android`，并用 CI 的 `Build android` 验证（本机不必装 Android SDK）。
+
 ---
 
 ## 深入阅读
