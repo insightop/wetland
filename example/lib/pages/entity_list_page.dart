@@ -21,9 +21,8 @@ class EntityListPage extends StatelessWidget {
       body: ListView.builder(
         itemBuilder: (context, index) {
           return ListTile(
-            leading: CircleAvatar(
-              backgroundColor: Colors.accents[index % Colors.accents.length],
-            ),
+            // 序号直接画在头像里，列表与详情用同一个号。
+            leading: CircleAvatar(child: Text('$index')),
             trailing: const Icon(Icons.arrow_forward_ios),
             title: Skeletonizer(
               effect: const SolidColorEffect(),
@@ -34,7 +33,7 @@ class EntityListPage extends StatelessWidget {
               child: const Text('tap to open detail'),
             ),
             onTap: () => context.wetland
-                .push(DetailRoute(title: title, item: '$title $index')),
+                .push(DetailRoute(title: title, number: index)),
           );
         },
       ),
