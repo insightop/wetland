@@ -33,7 +33,8 @@ class EntityListPage extends StatelessWidget {
               effect: const SolidColorEffect(),
               child: const Text('tap to open detail'),
             ),
-            onTap: () => context.wetland.push(DetailRoute(title: title)),
+            onTap: () => context.wetland
+                .push(DetailRoute(title: title, item: '$title $index')),
           );
         },
       ),

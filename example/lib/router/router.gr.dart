@@ -78,11 +78,12 @@ class ContactsRouteArgs {
 class DetailRoute extends _i9.PageRouteInfo<DetailRouteArgs> {
   DetailRoute({
     String title = 'Detail',
+    String? item,
     _i10.Key? key,
     List<_i9.PageRouteInfo>? children,
   }) : super(
          DetailRoute.name,
-         args: DetailRouteArgs(title: title, key: key),
+         args: DetailRouteArgs(title: title, item: item, key: key),
          rawPathParams: {'title': title},
          initialChildren: children,
        );
@@ -97,32 +98,34 @@ class DetailRoute extends _i9.PageRouteInfo<DetailRouteArgs> {
         orElse: () =>
             DetailRouteArgs(title: pathParams.getString('title', 'Detail')),
       );
-      return _i2.DetailPage(title: args.title, key: args.key);
+      return _i2.DetailPage(title: args.title, item: args.item, key: args.key);
     },
   );
 }
 
 class DetailRouteArgs {
-  const DetailRouteArgs({this.title = 'Detail', this.key});
+  const DetailRouteArgs({this.title = 'Detail', this.item, this.key});
 
   final String title;
+
+  final String? item;
 
   final _i10.Key? key;
 
   @override
   String toString() {
-    return 'DetailRouteArgs{title: $title, key: $key}';
+    return 'DetailRouteArgs{title: $title, item: $item, key: $key}';
   }
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     if (other is! DetailRouteArgs) return false;
-    return title == other.title && key == other.key;
+    return title == other.title && item == other.item && key == other.key;
   }
 
   @override
-  int get hashCode => title.hashCode ^ key.hashCode;
+  int get hashCode => title.hashCode ^ item.hashCode ^ key.hashCode;
 }
 
 /// generated route for

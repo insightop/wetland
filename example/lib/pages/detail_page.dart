@@ -8,8 +8,13 @@ import '../router/router.gr.dart';
 @RoutePage()
 class DetailPage extends StatelessWidget {
   final String title;
+
+  /// 打开该详情的列表条目（仅用于示例中区分不同条目，不参与路由路径）。
+  final String? item;
+
   const DetailPage({
     @PathParam() this.title = 'Detail',
+    this.item,
     super.key,
   });
 
@@ -19,14 +24,26 @@ class DetailPage extends StatelessWidget {
       appBar: AppBar(title: Text(title)),
       body: Column(
         children: [
+          if (item != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text('item: $item'),
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
                 Expanded(
                   child: FilledButton.tonal(
-                    onPressed: () => context.wetland
-                        .push(DetailRoute(title: '$title > $title')),
+                    onPressed: () => context.wetland.push(
+                      DetailRoute(
+                        title: '$title > $title',
+                        item: item == null ? null : '$item > $item',
+                      ),
+                    ),
                     child: const Text('drill-down'),
                   ),
                 ),
